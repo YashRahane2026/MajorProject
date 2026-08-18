@@ -23,43 +23,45 @@ import {
   Layers,
   Zap,
   Check,
-  X
+  X,
+  Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function SuspectDetailPage({ params }: { params: { id: string } }) {
   const [suspectStatus, setSuspectStatus] = useState('ARRESTED');
   const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showLinkCaseModal, setShowLinkCaseModal] = useState(false);
+
+  // Edit Suspect Profile Form State
+  const [suspectName, setSuspectName] = useState('Vikram Singh');
+  const [suspectAlias, setSuspectAlias] = useState('Vicky Don / Raju Ganger');
+  const [threatLevel, setThreatLevel] = useState('CRITICAL');
+  const [physicalDesc, setPhysicalDesc] = useState('Tall build, wheatish complexion, scar on left cheek.');
+  const [distinguishingMarks, setDistinguishingMarks] = useState('Large tattoo of trident on right forearm.');
+
+  // Link Case State
+  const [selectedCaseToLink, setSelectedCaseToLink] = useState('CR/2026/9001');
+
+  // Linked Cases List State
+  const [linkedCases, setLinkedCases] = useState([
+    { id: 'CR/2026/5001', title: 'Armed Robbery at Sitabuldi Jewelry Store', type: 'ROBBERY', status: 'UNDER_INVESTIGATION', date: '2026-08-10', role: 'PRIMARY_SUSPECT' },
+    { id: 'CR/2025/4412', title: 'Highway Narcotics Seizure Syndicate', type: 'NARCOTICS', status: 'CHARGE_SHEETED', date: '2025-11-05', role: 'ACCOMPLICE' },
+    { id: 'CR/2024/2009', title: 'Cyber Fraud Phishing Operations', type: 'CYBER_FRAUD', status: 'TRIAL', date: '2024-05-22', role: 'PRIMARY_SUSPECT' },
+  ]);
+
+  // Timeline events state
   const [newStatus, setNewStatus] = useState('REMAND');
   const [courtName, setCourtName] = useState('District & Sessions Court, Nagpur');
   const [orderNo, setOrderNo] = useState('ORD-2026-9941');
 
-  // Timeline events state
   const [timelineEvents, setTimelineEvents] = useState([
     { status: 'Remand Extended (7 Days)', date: '2026-08-18', location: 'District Court, Nagpur', order: 'ORD-2026-9941', current: true },
     { status: 'Arrested at Railway Station', date: '2026-08-15', location: 'Sitabuldi PS, Nagpur', order: 'FIR-2026-104', current: false },
     { status: 'ArcFace Alias Matched (98.2%)', date: '2026-08-10', location: 'Mumbai Cyber Cell Database', order: 'BIO-SCAN-09', current: false },
     { status: 'Bail Revoked', date: '2025-11-12', location: 'Sessions Court, Pune', order: 'ORD-2025-4412', current: false },
   ]);
-
-  const suspect = {
-    id: params.id,
-    name: 'Vikram Singh',
-    alias: 'Vicky Don / Raju Ganger',
-    dob: '1985-04-12',
-    gender: 'Male',
-    nationality: 'Indian',
-    physicalDesc: 'Tall build, wheatish complexion, scar on left cheek.',
-    height: '182 cm',
-    weight: '85 kg',
-    distinguishingMarks: 'Large tattoo of trident on right forearm.',
-    idType: 'Aadhaar',
-    idNumber: '9876-5432-1098',
-    address: 'Plot 45, Sitabuldi Road',
-    city: 'Nagpur',
-    state: 'Maharashtra',
-    threatLevel: 'CRITICAL',
-  };
 
   const handleUpdateStatus = () => {
     setSuspectStatus(newStatus);
@@ -74,6 +76,25 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
       ...timelineEvents.map(e => ({ ...e, current: false }))
     ]);
     setShowStatusModal(false);
+  };
+
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    setShowEditModal(false);
+  };
+
+  const handleLinkCase = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newLink = {
+      id: selectedCaseToLink,
+      title: 'Commercial Burglary & Strongroom Break-in',
+      type: 'BURGLARY',
+      status: 'UNDER_INVESTIGATION',
+      date: new Date().toISOString().split('T')[0],
+      role: 'PRIMARY_SUSPECT'
+    };
+    setLinkedCases([newLink, ...linkedCases]);
+    setShowLinkCaseModal(false);
   };
 
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').substring(0, 2);
@@ -111,19 +132,26 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-white tracking-tight">{suspect.name}</h1>
+              <h1 className="text-3xl font-bold text-white tracking-tight">{suspectName}</h1>
               <StatusBadge status={suspectStatus} />
-              <ThreatBadge level={suspect.threatLevel} />
+              <ThreatBadge level={threatLevel} />
             </div>
             <p className="text-sm text-slate-400 mt-1 flex items-center gap-2">
               <span>System ID: SUS-2026-089</span>
               <span>•</span>
-              <span className="text-blue-400 font-medium">Aliases: {suspect.alias}</span>
+              <span className="text-blue-400 font-medium">Aliases: {suspectAlias}</span>
             </p>
           </div>
         </div>
         
         <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setShowEditModal(true)}
+            className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] hover:bg-slate-800 text-white px-3.5 py-2.5 rounded-xl flex items-center gap-2 text-sm font-semibold transition-all"
+          >
+            <Edit className="w-4 h-4 text-blue-400" />
+            Edit Profile
+          </button>
           <button 
             onClick={() => setShowStatusModal(true)}
             className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl flex items-center gap-2 text-sm font-semibold transition-all shadow-lg shadow-blue-500/20"
@@ -166,50 +194,28 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
                 <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Date of Birth</p>
                 <p className="text-sm text-slate-200 font-medium flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-slate-400" />
-                  {new Date(suspect.dob).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  April 12, 1985 (Age: 41)
                 </p>
               </div>
               <div>
                 <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Gender / Nationality</p>
-                <p className="text-sm text-slate-200 font-medium">{suspect.gender} • {suspect.nationality}</p>
+                <p className="text-sm text-slate-200 font-medium">Male • Indian</p>
               </div>
               <div className="md:col-span-2">
                 <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Last Known Address</p>
                 <p className="text-sm text-slate-200 font-medium flex items-start gap-2">
                   <MapPin className="w-4 h-4 text-slate-400 mt-0.5" />
-                  {suspect.address}, {suspect.city}, {suspect.state}
+                  Plot 45, Sitabuldi Road, Nagpur, Maharashtra
                 </p>
               </div>
               <div className="md:col-span-2 border-t border-[hsl(217,33%,17%)] pt-6">
                 <p className="text-xs text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                   <Activity className="w-4 h-4 text-amber-400" /> Physical Marks & Traits
                 </p>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <span className="text-xs text-slate-400">Height:</span>
-                    <span className="text-sm text-slate-200 ml-2 font-medium">{suspect.height}</span>
-                  </div>
-                  <div>
-                    <span className="text-xs text-slate-400">Weight:</span>
-                    <span className="text-sm text-slate-200 ml-2 font-medium">{suspect.weight}</span>
-                  </div>
-                </div>
-                <p className="text-sm text-slate-300 mb-3">{suspect.physicalDesc}</p>
+                <p className="text-sm text-slate-300 mb-3">{physicalDesc}</p>
                 <div className="bg-[hsl(222,47%,6%)] p-3 rounded-lg border border-[hsl(217,33%,17%)]">
                   <span className="text-xs text-amber-400 font-medium mb-1 block">Distinguishing Marks:</span>
-                  <span className="text-sm text-slate-300 font-medium">{suspect.distinguishingMarks}</span>
-                </div>
-              </div>
-              <div className="md:col-span-2 border-t border-[hsl(217,33%,17%)] pt-6">
-                <p className="text-xs text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <Fingerprint className="w-4 h-4 text-purple-400" /> National Identification
-                </p>
-                <div className="bg-[hsl(222,47%,6%)] p-3 rounded-lg border border-[hsl(217,33%,17%)] flex items-center justify-between">
-                  <div>
-                    <span className="text-xs text-slate-400 block">{suspect.idType} Card</span>
-                    <span className="text-sm text-slate-200 font-mono font-bold tracking-wider">{suspect.idNumber}</span>
-                  </div>
-                  <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-1 rounded font-medium">Verified</span>
+                  <span className="text-sm text-slate-300 font-medium">{distinguishingMarks}</span>
                 </div>
               </div>
             </div>
@@ -222,14 +228,15 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
                 <Building className="w-4 h-4 text-purple-400" />
                 Linked Criminal Cases
               </h2>
-              <span className="bg-purple-500/20 text-purple-400 text-xs px-2.5 py-1 rounded-full font-semibold">3 Active Links</span>
+              <button 
+                onClick={() => setShowLinkCaseModal(true)}
+                className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 text-xs px-3 py-1.5 rounded-lg font-semibold border border-purple-500/30 flex items-center gap-1 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" /> Link Case
+              </button>
             </div>
             <div className="divide-y divide-[hsl(217,33%,17%)]">
-              {[
-                { id: 'CR/2026/5001', title: 'Armed Robbery at Sitabuldi Jewelry Store', type: 'ROBBERY', status: 'UNDER_INVESTIGATION', date: '2026-08-10', role: 'PRIMARY_SUSPECT' },
-                { id: 'CR/2025/4412', title: 'Highway Narcotics Seizure Syndicate', type: 'NARCOTICS', status: 'CHARGE_SHEETED', date: '2025-11-05', role: 'ACCOMPLICE' },
-                { id: 'CR/2024/2009', title: 'Cyber Fraud Phishing Operations', type: 'CYBER_FRAUD', status: 'TRIAL', date: '2024-05-22', role: 'PRIMARY_SUSPECT' },
-              ].map((c) => (
+              {linkedCases.map((c) => (
                 <div key={c.id} className="p-4 hover:bg-white/5 transition-colors flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
@@ -237,7 +244,7 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
                       <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700 font-mono">{c.role}</span>
                     </div>
                     <p className="text-sm font-medium text-slate-200">{c.title}</p>
-                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-1"><Clock className="w-3 h-3" /> Incident Date: {c.date}</p>
+                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-1"><Clock className="w-3 h-3" /> Date: {c.date}</p>
                   </div>
                   <span className="px-2.5 py-1 text-xs rounded-md font-semibold border bg-amber-500/10 text-amber-400 border-amber-500/20">
                     {c.status}
@@ -253,9 +260,9 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
           {/* Mugshot Card */}
           <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-6 flex flex-col items-center text-center shadow-sm">
             <div className="w-36 h-36 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 border-4 border-[hsl(222,47%,8%)] shadow-2xl ring-2 ring-blue-500/30 flex items-center justify-center mb-4 relative overflow-hidden">
-              <span className="text-3xl font-bold text-slate-300">{getInitials(suspect.name)}</span>
+              <span className="text-3xl font-bold text-slate-300">{getInitials(suspectName)}</span>
             </div>
-            <h3 className="font-bold text-white text-lg">{suspect.name}</h3>
+            <h3 className="font-bold text-white text-lg">{suspectName}</h3>
             <p className="text-xs text-slate-400 mb-4">ArcFace 512-dim Vector: Indexed</p>
             <div className="w-full p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs font-medium flex items-center justify-center gap-2">
               <AlertTriangle className="w-4 h-4 flex-shrink-0" />
@@ -295,6 +302,83 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <form onSubmit={handleSaveProfile} className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-fade-in">
+            <div className="flex justify-between items-center border-b border-[hsl(217,33%,17%)] pb-3">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Edit className="w-5 h-5 text-blue-400" /> Edit Suspect Profile
+              </h3>
+              <button type="button" onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="text-slate-300 font-semibold block mb-1">Full Name</label>
+                <input type="text" value={suspectName} onChange={(e) => setSuspectName(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
+              </div>
+              <div>
+                <label className="text-slate-300 font-semibold block mb-1">Aliases</label>
+                <input type="text" value={suspectAlias} onChange={(e) => setSuspectAlias(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
+              </div>
+              <div>
+                <label className="text-slate-300 font-semibold block mb-1">Threat Level</label>
+                <select value={threatLevel} onChange={(e) => setThreatLevel(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                  <option value="CRITICAL">CRITICAL</option>
+                  <option value="HIGH">HIGH</option>
+                  <option value="MEDIUM">MEDIUM</option>
+                  <option value="LOW">LOW</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-slate-300 font-semibold block mb-1">Physical Description</label>
+                <textarea rows={2} value={physicalDesc} onChange={(e) => setPhysicalDesc(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-[hsl(217,33%,17%)]">
+              <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 rounded-lg text-slate-400 hover:text-white">Cancel</button>
+              <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Link Case Modal */}
+      {showLinkCaseModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <form onSubmit={handleLinkCase} className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-fade-in">
+            <div className="flex justify-between items-center border-b border-[hsl(217,33%,17%)] pb-3">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Link2 className="w-5 h-5 text-purple-400" /> Link Case to Suspect
+              </h3>
+              <button type="button" onClick={() => setShowLinkCaseModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="text-slate-300 font-semibold block mb-1">Select Case Record</label>
+                <select value={selectedCaseToLink} onChange={(e) => setSelectedCaseToLink(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                  <option value="CR/2026/9001">CR/2026/9001 — Commercial Burglary & Strongroom Break-in</option>
+                  <option value="CR/2026/8002">CR/2026/8002 — Cyber Phishing Financial Fraud</option>
+                  <option value="CR/2026/7003">CR/2026/7003 — Highway Vehicle Theft Ring</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-[hsl(217,33%,17%)]">
+              <button type="button" onClick={() => setShowLinkCaseModal(false)} className="px-4 py-2 rounded-lg text-slate-400 hover:text-white">Cancel</button>
+              <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold">Confirm Case Link</button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Lifecycle Status Modal */}
       {showStatusModal && (

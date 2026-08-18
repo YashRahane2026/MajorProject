@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Filter, Plus, Briefcase, MapPin, Calendar, Users, FileText, ChevronRight, AlertCircle } from 'lucide-react';
+import { Search, Filter, Plus, Briefcase, MapPin, Calendar, Users, FileText, ChevronRight, AlertCircle, X, Check } from 'lucide-react';
 
-const MOCK_CASES = [
+const INITIAL_CASES = [
   { id: 'CASE-2026-084', title: 'Armed Robbery at Jeweller', type: 'ROBBERY', status: 'ACTIVE', severity: 'HIGH', jurisdiction: 'Sitabuldi, Nagpur', date: '2026-08-10', officer: 'Insp. R. Patil', suspects: 3, firs: 2 },
   { id: 'CASE-2026-079', title: 'Vehicle Theft Syndicate', type: 'THEFT', status: 'UNDER_INVESTIGATION', severity: 'MEDIUM', jurisdiction: 'Pune East', date: '2026-08-05', officer: 'Sub-Insp. S. Kadam', suspects: 5, firs: 8 },
   { id: 'CASE-2026-062', title: 'Cyber Fraud - Bank Scam', type: 'FRAUD', status: 'ACTIVE', severity: 'HIGH', jurisdiction: 'Cyber Cell, Nagpur', date: '2026-07-28', officer: 'ACP V. Sharma', suspects: 2, firs: 15 },
@@ -38,11 +38,68 @@ const SeverityBadge = ({ severity }: { severity: string }) => {
 };
 
 export default function CasesPage() {
+  const [casesList, setCasesList] = useState(INITIAL_CASES);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  const filteredCases = MOCK_CASES.filter((c) => {
+  // New Case Modal State
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newType, setNewType] = useState('ROBBERY');
+  const [newJurisdiction, setNewJurisdiction] = useState('Sitabuldi PS, Nagpur');
+  const [newOfficer, setNewOfficer] = useState('Insp. Mohan Patil');
+  const [newSeverity, setNewSeverity] = useState('HIGH');
+
+  // Load custom cases from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const customJson = localStorage.getItem('custom_cases');
+      if (customJson) {
+        try {
+          const list = JSON.parse(customJson);
+          setCasesList([...list, ...INITIAL_CASES]);
+        } catch {
+          // ignore
+        }
+      }
+    }
+  }, []);
+
+  const handleCreateCase = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim()) {
+      alert('Please enter a Case Title.');
+      return;
+    }
+
+    const autoCaseId = `CASE-2026-${Math.floor(100 + Math.random() * 900)}`;
+    const newCase = {
+      id: autoCaseId,
+      title: newTitle.trim(),
+      type: newType,
+      status: 'ACTIVE',
+      severity: newSeverity,
+      jurisdiction: newJurisdiction.trim(),
+      date: new Date().toISOString().split('T')[0],
+      officer: newOfficer.trim(),
+      suspects: 1,
+      firs: 1,
+    };
+
+    const updated = [newCase, ...casesList];
+    setCasesList(updated);
+
+    if (typeof window !== 'undefined') {
+      const customOnly = updated.filter(c => c.id.startsWith('CASE-2026-') && !INITIAL_CASES.some(i => i.id === c.id));
+      localStorage.setItem('custom_cases', JSON.stringify(customOnly));
+    }
+
+    setNewTitle('');
+    setShowCreateModal(false);
+  };
+
+  const filteredCases = casesList.filter((c) => {
     const matchesSearch = 
       c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -56,13 +113,13 @@ export default function CasesPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[hsl(217,33%,17%)] pb-4">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Cases Directory</h1>
-          <p className="text-sm text-slate-400 mt-1">Manage and track unified criminal cases across jurisdictions</p>
+          <p className="text-sm text-slate-400 mt-1">Manage and track unified criminal cases across police jurisdictions</p>
         </div>
         <button 
-          onClick={() => alert('New case window created!')}
+          onClick={() => setShowCreateModal(true)}
           className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl flex items-center text-sm font-semibold transition-all shadow-lg shadow-blue-500/20"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -112,7 +169,7 @@ export default function CasesPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {filteredCases.length > 0 ? (
           filteredCases.map((c) => (
-            <Link key={c.id} href={`/cases/${c.id}`} className="block group">
+            <Link key={c.id} href={`/cases/1`} className="block group">
               <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-5 shadow-sm hover:border-blue-500/50 hover:bg-white/[0.02] transition-all h-full flex flex-col relative overflow-hidden">
                 <div className="flex justify-between items-start mb-3">
                   <div>
@@ -149,6 +206,96 @@ export default function CasesPage() {
           </div>
         )}
       </div>
+
+      {/* Create New Case Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <form onSubmit={handleCreateCase} className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-fade-in">
+            <div className="flex justify-between items-center border-b border-[hsl(217,33%,17%)] pb-3">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-blue-400" />
+                Create New Criminal Case
+              </h3>
+              <button type="button" onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-1">Case Title <span className="text-red-500">*</span></label>
+                <input 
+                  required
+                  type="text" 
+                  value={newTitle} 
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" 
+                  placeholder="e.g. Highway Robbery & Syndicate Fraud"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-1">Crime Type</label>
+                  <select 
+                    value={newType} 
+                    onChange={(e) => setNewType(e.target.value)}
+                    className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="ROBBERY">Armed Robbery</option>
+                    <option value="THEFT">Burglary / Theft</option>
+                    <option value="FRAUD">Cyber Fraud</option>
+                    <option value="ASSAULT">Assault</option>
+                    <option value="SMUGGLING">Smuggling</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-1">Severity</label>
+                  <select 
+                    value={newSeverity} 
+                    onChange={(e) => setNewSeverity(e.target.value)}
+                    className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="CRITICAL">CRITICAL</option>
+                    <option value="HIGH">HIGH</option>
+                    <option value="MEDIUM">MEDIUM</option>
+                    <option value="LOW">LOW</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-1">Jurisdiction / Police Station</label>
+                <input 
+                  type="text" 
+                  value={newJurisdiction} 
+                  onChange={(e) => setNewJurisdiction(e.target.value)}
+                  className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" 
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-1">Investigating Officer</label>
+                <input 
+                  type="text" 
+                  value={newOfficer} 
+                  onChange={(e) => setNewOfficer(e.target.value)}
+                  className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" 
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-[hsl(217,33%,17%)]">
+              <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-white">
+                Cancel
+              </button>
+              <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold flex items-center gap-1">
+                <Check className="w-4 h-4" /> Save & Open Case
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

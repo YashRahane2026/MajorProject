@@ -69,6 +69,12 @@ export default function FIRDetailPage({ params }: { params: { id: string } }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <button 
+            onClick={() => window.print()} 
+            className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3.5 py-2 rounded-lg flex items-center gap-2 text-sm font-semibold transition-colors"
+          >
+            Print Official FIR
+          </button>
           <Link href="/matching/cases" className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center text-sm font-semibold transition-colors shadow-lg shadow-blue-500/20 gap-2">
             <Zap className="w-4 h-4" /> Run FIR Similarity Search
           </Link>
