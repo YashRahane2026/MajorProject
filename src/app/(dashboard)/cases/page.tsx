@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Filter, Plus, Briefcase, MapPin, Calendar, Users, FileText, ChevronRight, AlertCircle, X, Check } from 'lucide-react';
+import { Search, Filter, Plus, Briefcase, MapPin, Calendar, Users, FileText, ChevronRight, ChevronLeft, AlertCircle, X, Check } from 'lucide-react';
 
 const INITIAL_CASES = [
   { id: 'CASE-2026-084', title: 'Armed Robbery at Jeweller', type: 'ROBBERY', status: 'ACTIVE', severity: 'HIGH', jurisdiction: 'Sitabuldi, Nagpur', date: '2026-08-10', officer: 'Insp. R. Patil', suspects: 3, firs: 2 },
@@ -42,6 +42,8 @@ export default function CasesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 4;
 
   // New Case Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -111,6 +113,20 @@ export default function CasesPage() {
     return matchesSearch && matchesType && matchesStatus;
   });
 
+  // Pagination Math
+  const totalPages = Math.max(1, Math.ceil(filteredCases.length / pageSize));
+  const pageToDisplay = Math.min(currentPage, totalPages);
+  const startIndex = (pageToDisplay - 1) * pageSize;
+  const paginatedCases = filteredCases.slice(startIndex, startIndex + pageSize);
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[hsl(217,33%,17%)] pb-4">
@@ -136,13 +152,13 @@ export default function CasesPage() {
             placeholder="Search cases by ID, title, or jurisdiction..." 
             className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg pl-9 pr-4 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
           />
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <select 
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
+            onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
             className="bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
           >
             <option value="">All Crime Types</option>
@@ -154,7 +170,7 @@ export default function CasesPage() {
           </select>
           <select 
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
             className="bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
           >
             <option value="">All Statuses</option>
@@ -167,8 +183,8 @@ export default function CasesPage() {
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filteredCases.length > 0 ? (
-          filteredCases.map((c) => (
+        {paginatedCases.length > 0 ? (
+          paginatedCases.map((c) => (
             <Link key={c.id} href={`/cases/1`} className="block group">
               <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-5 shadow-sm hover:border-blue-500/50 hover:bg-white/[0.02] transition-all h-full flex flex-col relative overflow-hidden">
                 <div className="flex justify-between items-start mb-3">
@@ -205,6 +221,32 @@ export default function CasesPage() {
             No case records match your search criteria.
           </div>
         )}
+      </div>
+
+      {/* Stateful Pagination Footer */}
+      <div className="p-4 bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl flex items-center justify-between text-xs text-slate-400">
+        <span>
+          Showing {filteredCases.length > 0 ? startIndex + 1 : 0} to {Math.min(startIndex + pageSize, filteredCases.length)} of {filteredCases.length} case records
+        </span>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={handlePrevPage} 
+            disabled={currentPage === 1}
+            className="p-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800 transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="text-xs font-mono font-medium text-slate-300">
+            Page {pageToDisplay} of {totalPages}
+          </span>
+          <button 
+            onClick={handleNextPage} 
+            disabled={currentPage >= totalPages}
+            className="p-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800 transition-colors"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* Create New Case Modal */}
