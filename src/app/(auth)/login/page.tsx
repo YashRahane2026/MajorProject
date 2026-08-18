@@ -21,8 +21,8 @@ export default function LoginPage() {
   };
 
   const handleDemoLogin = (role: string) => {
-    // Store role in localStorage for demo purposes
     if (typeof window !== 'undefined') {
+      document.cookie = `demo_role=${role}; path=/; max-age=86400`;
       localStorage.setItem('demo_role', role);
       localStorage.setItem('demo_user', `Demo ${role.charAt(0).toUpperCase() + role.slice(1)}`);
       router.push('/overview');
