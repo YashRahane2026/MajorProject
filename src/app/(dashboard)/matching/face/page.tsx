@@ -329,57 +329,7 @@ export default function FaceMatchingPage() {
               </div>
             )}
 
-            {/* Custom Registered Suspect Pickers (If available) */}
-            {customSuspects.length > 0 && !previewUrl && (
-              <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl space-y-2">
-                <p className="text-xs font-bold text-blue-300 flex items-center gap-1">
-                  <UserCheck className="w-3.5 h-3.5 text-blue-400" /> Newly Added Suspects (Click to test match):
-                </p>
-                <div className="flex flex-col gap-1.5">
-                  {customSuspects.map((cs, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => selectCustomSuspectPhoto(cs)}
-                      className="p-2 bg-slate-900 hover:bg-slate-800 rounded-lg border border-slate-700 text-left flex items-center gap-2 transition-colors"
-                    >
-                      <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-800 flex-shrink-0">
-                        <img src={cs.photoUrl || cs.photo} alt={cs.name} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold text-white truncate">{cs.name}</p>
-                        <p className="text-[10px] text-slate-400 font-mono">ID: {cs.id}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
-            {/* Test Sample Selectors */}
-            {!previewUrl && (
-              <div className="mb-6">
-                <p className="text-xs font-medium text-slate-400 mb-2 flex items-center gap-1">
-                  <UserCheck className="w-3.5 h-3.5 text-emerald-400" /> Quick Test Mugshots:
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { name: 'Vikram Sharma', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400' },
-                    { name: 'Rahul Desai', url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400' },
-                  ].map((s, idx) => (
-                    <button 
-                      key={idx}
-                      onClick={() => selectSamplePhoto(s.url, s.name)}
-                      className="group relative rounded-lg overflow-hidden border border-slate-800 hover:border-blue-500 transition-all h-14 bg-slate-900 flex items-center p-1.5 gap-2"
-                    >
-                      <img src={s.url} alt={s.name} className="w-11 h-11 rounded-md object-cover" />
-                      <span className="text-xs text-slate-300 text-left font-medium leading-tight">
-                        {s.name}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* Threshold Slider */}
             <div className="space-y-3 mb-6 bg-slate-900/60 p-4 rounded-xl border border-slate-800">
