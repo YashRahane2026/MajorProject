@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Filter, Plus, FileText, Calendar, MapPin, Eye, Link as LinkIcon, Sparkles } from 'lucide-react';
+import { Search, Filter, Plus, FileText, Calendar, MapPin, Eye, Link as LinkIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const INITIAL_FIRS = [
   { id: 'FIR-2026-1042', caseId: 'CASE-2026-084', type: 'ROBBERY', complainant: 'Ramesh Patel', date: '2026-08-10', station: 'Sitabuldi PS', status: 'INVESTIGATING' },
@@ -20,6 +20,8 @@ export default function FIRsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
 
   // Load custom FIRs from localStorage
   useEffect(() => {
@@ -48,6 +50,20 @@ export default function FIRsPage() {
     return matchesSearch && matchesType && matchesStatus;
   });
 
+  // Pagination Math
+  const totalPages = Math.max(1, Math.ceil(filteredFirs.length / pageSize));
+  const pageToDisplay = Math.min(currentPage, totalPages);
+  const startIndex = (pageToDisplay - 1) * pageSize;
+  const paginatedFirs = filteredFirs.slice(startIndex, startIndex + pageSize);
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -73,13 +89,13 @@ export default function FIRsPage() {
               placeholder="Search FIR number, complainant, station..." 
               className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg pl-9 pr-4 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
             />
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
             <select 
               value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
+              onChange={(e) => { setTypeFilter(e.target.value); setCurrentPage(1); }}
               className="bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
             >
               <option value="">All Crime Types</option>
@@ -91,7 +107,7 @@ export default function FIRsPage() {
             </select>
             <select 
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
               className="bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
             >
               <option value="">All Statuses</option>
@@ -118,8 +134,8 @@ export default function FIRsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[hsl(217,33%,17%)] text-sm">
-              {filteredFirs.length > 0 ? (
-                filteredFirs.map((fir) => (
+              {paginatedFirs.length > 0 ? (
+                paginatedFirs.map((fir) => (
                   <tr key={fir.id} className="hover:bg-white/5 transition-colors group">
                     <td className="p-4">
                       <div className="flex items-center gap-2">
@@ -139,7 +155,7 @@ export default function FIRsPage() {
                     </td>
                     <td className="p-4">
                       {fir.caseId ? (
-                        <Link href={`/cases/${fir.caseId}`} className="text-xs font-mono text-blue-400 hover:underline flex items-center gap-1">
+                        <Link href={`/cases/1`} className="text-xs font-mono text-blue-400 hover:underline flex items-center gap-1">
                           <LinkIcon className="w-3 h-3" /> {fir.caseId}
                         </Link>
                       ) : (
@@ -171,9 +187,30 @@ export default function FIRsPage() {
           </table>
         </div>
 
-        {/* Footer */}
+        {/* Stateful Pagination Footer */}
         <div className="p-4 border-t border-[hsl(217,33%,17%)] flex items-center justify-between text-xs text-slate-400 bg-slate-900/40">
-          <span>Showing {filteredFirs.length} of {firs.length} FIR records</span>
+          <span>
+            Showing {filteredFirs.length > 0 ? startIndex + 1 : 0} to {Math.min(startIndex + pageSize, filteredFirs.length)} of {filteredFirs.length} FIR records
+          </span>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handlePrevPage} 
+              disabled={currentPage === 1}
+              className="p-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800 transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="text-xs font-mono font-medium text-slate-300">
+              Page {pageToDisplay} of {totalPages}
+            </span>
+            <button 
+              onClick={handleNextPage} 
+              disabled={currentPage >= totalPages}
+              className="p-1.5 rounded-lg border border-slate-800 bg-slate-900 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800 transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
