@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Filter, Plus, ChevronLeft, ChevronRight, Eye, ShieldAlert, UserCheck, X } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { Search, Filter, Plus, ChevronLeft, ChevronRight, Eye, ShieldAlert, UserCheck, X, Trash2 } from 'lucide-react';
 
 const INITIAL_SUSPECTS = [
   { id: '1', name: 'Vikram Sharma', alias: 'Vicky', threatLevel: 'CRITICAL', status: 'AT_LARGE', city: 'Nagpur', cases: 3, lastUpdated: '2026-08-18' },
@@ -66,6 +67,18 @@ export default function SuspectsPage() {
     }
   }, []);
 
+  const handleDeleteSuspect = (id: string, name: string) => {
+    if (confirm(`Are you sure you want to delete suspect record: "${name}"?`)) {
+      const updated = suspects.filter(s => String(s.id) !== String(id));
+      setSuspects(updated);
+
+      if (typeof window !== 'undefined') {
+        const customOnly = updated.filter(s => String(s.id).startsWith('custom_'));
+        localStorage.setItem('custom_suspects', JSON.stringify(customOnly));
+      }
+    }
+  };
+
   // Real-time filtering logic
   const filteredSuspects = suspects.filter((s) => {
     const q = searchTerm.trim().toLowerCase();
@@ -101,7 +114,7 @@ export default function SuspectsPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[hsl(217,33%,17%)] pb-4">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">Suspects Directory</h1>
-          <p className="text-sm text-slate-400 mt-1">Manage, search, and track criminal profiles with 512-dim ArcFace vector indexing</p>
+          <p className="text-sm text-slate-400 mt-1">Manage, search, track, and remove criminal records with ArcFace 512-dim vector indexing</p>
         </div>
         <Link href="/suspects/new">
           <button className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl flex items-center text-sm font-semibold transition-all shadow-lg shadow-blue-500/20">
@@ -217,11 +230,20 @@ export default function SuspectsPage() {
                       {suspect.cases}
                     </td>
                     <td className="p-4 text-right">
-                      <Link href={`/suspects/1`}>
-                        <button className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors" title="View Dossier">
-                          <Eye className="w-4 h-4" />
+                      <div className="flex items-center justify-end gap-1">
+                        <Link href={`/suspects/${suspect.id}`}>
+                          <button className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors" title="View Dossier">
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </Link>
+                        <button 
+                          onClick={() => handleDeleteSuspect(suspect.id, suspect.name)} 
+                          className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" 
+                          title="Delete Suspect Record"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
-                      </Link>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -236,7 +258,7 @@ export default function SuspectsPage() {
           </table>
         </div>
 
-        {/* Working Stateful Pagination Footer */}
+        {/* Stateful Pagination Footer */}
         <div className="p-4 border-t border-[hsl(217,33%,17%)] flex items-center justify-between text-xs text-slate-400 bg-slate-900/40">
           <span>
             Showing {filteredSuspects.length > 0 ? startIndex + 1 : 0} to {Math.min(startIndex + pageSize, filteredSuspects.length)} of {filteredSuspects.length} suspect records

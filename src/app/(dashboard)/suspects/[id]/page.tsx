@@ -24,8 +24,10 @@ import {
   Zap,
   Check,
   X,
-  Plus
+  Plus,
+  Trash2
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 const DEFAULT_SUSPECT_MAP: Record<string, any> = {
@@ -37,10 +39,30 @@ const DEFAULT_SUSPECT_MAP: Record<string, any> = {
 };
 
 export default function SuspectDetailPage({ params }: { params: { id: string } }) {
+  const router = useRouter();
+
   const [suspectStatus, setSuspectStatus] = useState('ARRESTED');
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showLinkCaseModal, setShowLinkCaseModal] = useState(false);
+
+  const handleDeleteRecord = () => {
+    if (confirm(`Are you sure you want to permanently delete suspect record: "${suspectName}"?`)) {
+      if (typeof window !== 'undefined') {
+        const customJson = localStorage.getItem('custom_suspects');
+        if (customJson) {
+          try {
+            const list = JSON.parse(customJson);
+            const updated = list.filter((s: any) => String(s.id) !== String(params.id));
+            localStorage.setItem('custom_suspects', JSON.stringify(updated));
+          } catch {
+            // ignore
+          }
+        }
+      }
+      router.push('/suspects');
+    }
+  };
 
   // Edit Suspect Profile Form State
   const [suspectName, setSuspectName] = useState('Vikram Sharma');
@@ -208,6 +230,14 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
           >
             <GitCommit className="w-4 h-4" />
             Update Lifecycle Status
+          </button>
+          <button 
+            onClick={handleDeleteRecord}
+            className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 px-3 py-2.5 rounded-xl flex items-center gap-2 text-sm font-semibold transition-all"
+            title="Delete Suspect Record"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete
           </button>
         </div>
       </div>
