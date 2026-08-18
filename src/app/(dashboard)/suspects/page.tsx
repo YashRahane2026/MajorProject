@@ -180,18 +180,20 @@ export default function SuspectsPage() {
               {paginatedSuspects.length > 0 ? (
                 paginatedSuspects.map((suspect) => (
                   <tr key={suspect.id} className="hover:bg-white/5 transition-colors group">
-                    <td className="p-4 flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-[hsl(217,33%,17%)] flex items-center justify-center text-xs font-bold text-slate-300 border border-slate-700">
-                        {getInitials(suspect.name)}
-                      </div>
-                      <div>
-                        <div className="font-semibold text-slate-200 group-hover:text-blue-400 transition-colors">
-                          {suspect.name}
+                    <td className="p-4">
+                      <Link href={`/suspects/${suspect.id}`} className="flex items-center gap-3 group/item">
+                        <div className="w-9 h-9 rounded-full bg-[hsl(217,33%,17%)] flex items-center justify-center text-xs font-bold text-slate-300 border border-slate-700">
+                          {getInitials(suspect.name)}
                         </div>
-                        <div className="text-[10px] text-slate-500 font-mono">
-                          ID: SUS-{suspect.id}
+                        <div>
+                          <div className="font-semibold text-slate-200 group-hover/item:text-blue-400 transition-colors">
+                            {suspect.name}
+                          </div>
+                          <div className="text-[10px] text-slate-500 font-mono">
+                            ID: SUS-{suspect.id}
+                          </div>
                         </div>
-                      </div>
+                      </Link>
                     </td>
                     <td className="p-4 text-slate-400 text-xs">
                       {suspect.alias && suspect.alias !== '-' ? (

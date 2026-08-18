@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   ArrowLeft, 
@@ -28,6 +28,14 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+const DEFAULT_SUSPECT_MAP: Record<string, any> = {
+  '1': { name: 'Vikram Sharma', alias: 'Vicky', threatLevel: 'CRITICAL', status: 'AT_LARGE', city: 'Nagpur', physicalDesc: 'Tall build, wheatish complexion, scar on left cheek.', distinguishingMarks: 'Large tattoo of trident on right forearm.', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300' },
+  '2': { name: 'Rahul Desai', alias: 'Raju', threatLevel: 'HIGH', status: 'ARRESTED', city: 'Pune', physicalDesc: 'Medium build, short dark hair, sharp jawline.', distinguishingMarks: 'Cut mark near right ear.', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300' },
+  '3': { name: 'Amit Patel', alias: 'Bhaiya', threatLevel: 'MEDIUM', status: 'IN_REMAND', city: 'Nagpur', physicalDesc: 'Stocky build, wears spectacles.', distinguishingMarks: 'Mole on right side of neck.', photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300' },
+  '4': { name: 'Sanjay Kumar', alias: '-', threatLevel: 'LOW', status: 'BAILED', city: 'Mumbai', physicalDesc: 'Lean build, dark complexion.', distinguishingMarks: 'Burn scar on left wrist.', photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300' },
+  '5': { name: 'Priya Sharma', alias: 'Lady Gang', threatLevel: 'MEDIUM', status: 'AT_LARGE', city: 'Hyderabad', physicalDesc: 'Slim build, long black hair.', distinguishingMarks: 'Star tattoo on left shoulder.', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300' },
+};
+
 export default function SuspectDetailPage({ params }: { params: { id: string } }) {
   const [suspectStatus, setSuspectStatus] = useState('ARRESTED');
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -35,11 +43,13 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
   const [showLinkCaseModal, setShowLinkCaseModal] = useState(false);
 
   // Edit Suspect Profile Form State
-  const [suspectName, setSuspectName] = useState('Vikram Singh');
-  const [suspectAlias, setSuspectAlias] = useState('Vicky Don / Raju Ganger');
+  const [suspectName, setSuspectName] = useState('Vikram Sharma');
+  const [suspectAlias, setSuspectAlias] = useState('Vicky');
   const [threatLevel, setThreatLevel] = useState('CRITICAL');
   const [physicalDesc, setPhysicalDesc] = useState('Tall build, wheatish complexion, scar on left cheek.');
   const [distinguishingMarks, setDistinguishingMarks] = useState('Large tattoo of trident on right forearm.');
+  const [suspectCity, setSuspectCity] = useState('Nagpur');
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
   // Link Case State
   const [selectedCaseToLink, setSelectedCaseToLink] = useState('CR/2026/9001');
@@ -62,6 +72,46 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
     { status: 'ArcFace Alias Matched (98.2%)', date: '2026-08-10', location: 'Mumbai Cyber Cell Database', order: 'BIO-SCAN-09', current: false },
     { status: 'Bail Revoked', date: '2025-11-12', location: 'Sessions Court, Pune', order: 'ORD-2025-4412', current: false },
   ]);
+
+  // DYNAMIC DATA LOADING BASED ON params.id
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // 1. Check custom_suspects in localStorage
+      const customJson = localStorage.getItem('custom_suspects');
+      if (customJson) {
+        try {
+          const list = JSON.parse(customJson);
+          const matched = list.find((s: any) => String(s.id) === String(params.id));
+          if (matched) {
+            setSuspectName(matched.name);
+            setSuspectAlias(matched.alias || '-');
+            setThreatLevel(matched.threatLevel || 'HIGH');
+            setSuspectStatus(matched.status || 'ARRESTED');
+            setSuspectCity(matched.city || 'Nagpur');
+            setPhysicalDesc(matched.physicalDesc || 'Registered criminal suspect profile.');
+            setDistinguishingMarks(matched.distinguishingMarks || 'Scar/tattoo mark registered.');
+            setPhotoUrl(matched.photoUrl || matched.photo || null);
+            return;
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      // 2. Check DEFAULT_SUSPECT_MAP
+      const defaultData = DEFAULT_SUSPECT_MAP[params.id];
+      if (defaultData) {
+        setSuspectName(defaultData.name);
+        setSuspectAlias(defaultData.alias);
+        setThreatLevel(defaultData.threatLevel);
+        setSuspectStatus(defaultData.status);
+        setSuspectCity(defaultData.city);
+        setPhysicalDesc(defaultData.physicalDesc);
+        setDistinguishingMarks(defaultData.distinguishingMarks);
+        setPhotoUrl(defaultData.photo);
+      }
+    }
+  }, [params.id]);
 
   const handleUpdateStatus = () => {
     setSuspectStatus(newStatus);
@@ -137,7 +187,7 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
               <ThreatBadge level={threatLevel} />
             </div>
             <p className="text-sm text-slate-400 mt-1 flex items-center gap-2">
-              <span>System ID: SUS-2026-089</span>
+              <span>System ID: SUS-{params.id}</span>
               <span>•</span>
               <span className="text-blue-400 font-medium">Aliases: {suspectAlias}</span>
             </p>
@@ -170,7 +220,7 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
           </div>
           <div>
             <p className="font-semibold text-white text-sm">Unified Biometric Cluster Detected (3 Jurisdictions)</p>
-            <p className="text-xs text-purple-300/80">Identical ArcFace 512-dim facial vector matches cases across Nagpur Central, Mumbai Cyber Cell, and Pune Rural.</p>
+            <p className="text-xs text-purple-300/80">Identical ArcFace 512-dim facial vector matches cases across {suspectCity}, Mumbai Cyber Cell, and Pune Rural.</p>
           </div>
         </div>
         <Link href="/analytics" className="text-xs bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-purple-200 px-3 py-1.5 rounded-lg font-medium whitespace-nowrap self-start md:self-auto transition-colors flex items-center gap-1">
@@ -194,7 +244,7 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
                 <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Date of Birth</p>
                 <p className="text-sm text-slate-200 font-medium flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-slate-400" />
-                  April 12, 1985 (Age: 41)
+                  April 12, 1988 (Age: 38)
                 </p>
               </div>
               <div>
@@ -205,7 +255,7 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
                 <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Last Known Address</p>
                 <p className="text-sm text-slate-200 font-medium flex items-start gap-2">
                   <MapPin className="w-4 h-4 text-slate-400 mt-0.5" />
-                  Plot 45, Sitabuldi Road, Nagpur, Maharashtra
+                  Sitabuldi Road, {suspectCity}, Maharashtra
                 </p>
               </div>
               <div className="md:col-span-2 border-t border-[hsl(217,33%,17%)] pt-6">
@@ -260,7 +310,11 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
           {/* Mugshot Card */}
           <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-6 flex flex-col items-center text-center shadow-sm">
             <div className="w-36 h-36 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 border-4 border-[hsl(222,47%,8%)] shadow-2xl ring-2 ring-blue-500/30 flex items-center justify-center mb-4 relative overflow-hidden">
-              <span className="text-3xl font-bold text-slate-300">{getInitials(suspectName)}</span>
+              {photoUrl ? (
+                <img src={photoUrl} alt={suspectName} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-3xl font-bold text-slate-300">{getInitials(suspectName)}</span>
+              )}
             </div>
             <h3 className="font-bold text-white text-lg">{suspectName}</h3>
             <p className="text-xs text-slate-400 mb-4">ArcFace 512-dim Vector: Indexed</p>
