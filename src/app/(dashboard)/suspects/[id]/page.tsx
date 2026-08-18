@@ -36,6 +36,13 @@ const DEFAULT_SUSPECT_MAP: Record<string, any> = {
   '3': { name: 'Amit Patel', alias: 'Bhaiya', threatLevel: 'MEDIUM', status: 'IN_REMAND', city: 'Nagpur', physicalDesc: 'Stocky build, wears spectacles.', distinguishingMarks: 'Mole on right side of neck.', photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300' },
   '4': { name: 'Sanjay Kumar', alias: '-', threatLevel: 'LOW', status: 'BAILED', city: 'Mumbai', physicalDesc: 'Lean build, dark complexion.', distinguishingMarks: 'Burn scar on left wrist.', photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300' },
   '5': { name: 'Priya Sharma', alias: 'Lady Gang', threatLevel: 'MEDIUM', status: 'AT_LARGE', city: 'Hyderabad', physicalDesc: 'Slim build, long black hair.', distinguishingMarks: 'Star tattoo on left shoulder.', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300' },
+  '6': { name: 'Ravi Verma', alias: 'Baba', threatLevel: 'CRITICAL', status: 'CONVICTED', city: 'Bangalore', physicalDesc: 'Muscular build, bearded, short hair.', distinguishingMarks: 'Eagle tattoo on chest.', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300' },
+  '7': { name: 'Anil Kapoor', alias: 'AK', threatLevel: 'HIGH', status: 'AT_LARGE', city: 'Chennai', physicalDesc: 'Average height, curly dark hair.', distinguishingMarks: 'Surgical scar on right knee.', photo: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=300' },
+  '8': { name: 'Sneha Reddy', alias: '-', threatLevel: 'LOW', status: 'ARRESTED', city: 'Kolkata', physicalDesc: 'Petite build, brown eyes.', distinguishingMarks: 'Birthmark on left forearm.', photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300' },
+  '9': { name: 'Mohammed Ali', alias: 'Bhai', threatLevel: 'HIGH', status: 'IN_REMAND', city: 'Mumbai', physicalDesc: 'Tall, athletic build.', distinguishingMarks: 'Scar above left eyebrow.', photo: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=300' },
+  '10': { name: 'Deepak Joshi', alias: '-', threatLevel: 'MEDIUM', status: 'BAILED', city: 'Pune', physicalDesc: 'Medium height, wears thick glasses.', distinguishingMarks: 'Tattoo on right wrist.', photo: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=300' },
+  '11': { name: 'Neha Gupta', alias: '-', threatLevel: 'LOW', status: 'CONVICTED', city: 'Nagpur', physicalDesc: 'Fair complexion, medium height.', distinguishingMarks: 'Small scar on chin.', photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300' },
+  '12': { name: 'Surya Narayanan', alias: 'Suri', threatLevel: 'CRITICAL', status: 'AT_LARGE', city: 'Chennai', physicalDesc: 'Broad shoulders, shaved head.', distinguishingMarks: 'Dragon tattoo on arm.', photo: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300' },
 };
 
 export default function SuspectDetailPage({ params }: { params: { id: string } }) {
@@ -46,30 +53,12 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
   const [showEditModal, setShowEditModal] = useState(false);
   const [showLinkCaseModal, setShowLinkCaseModal] = useState(false);
 
-  const handleDeleteRecord = () => {
-    if (confirm(`Are you sure you want to permanently delete suspect record: "${suspectName}"?`)) {
-      if (typeof window !== 'undefined') {
-        const customJson = localStorage.getItem('custom_suspects');
-        if (customJson) {
-          try {
-            const list = JSON.parse(customJson);
-            const updated = list.filter((s: any) => String(s.id) !== String(params.id));
-            localStorage.setItem('custom_suspects', JSON.stringify(updated));
-          } catch {
-            // ignore
-          }
-        }
-      }
-      router.push('/suspects');
-    }
-  };
-
   // Edit Suspect Profile Form State
-  const [suspectName, setSuspectName] = useState('Vikram Sharma');
-  const [suspectAlias, setSuspectAlias] = useState('Vicky');
-  const [threatLevel, setThreatLevel] = useState('CRITICAL');
-  const [physicalDesc, setPhysicalDesc] = useState('Tall build, wheatish complexion, scar on left cheek.');
-  const [distinguishingMarks, setDistinguishingMarks] = useState('Large tattoo of trident on right forearm.');
+  const [suspectName, setSuspectName] = useState('');
+  const [suspectAlias, setSuspectAlias] = useState('');
+  const [threatLevel, setThreatLevel] = useState('HIGH');
+  const [physicalDesc, setPhysicalDesc] = useState('');
+  const [distinguishingMarks, setDistinguishingMarks] = useState('');
   const [suspectCity, setSuspectCity] = useState('Nagpur');
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
@@ -98,12 +87,14 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
   // DYNAMIC DATA LOADING BASED ON params.id
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const idStr = String(params.id).trim();
+
       // 1. Check custom_suspects in localStorage
       const customJson = localStorage.getItem('custom_suspects');
       if (customJson) {
         try {
           const list = JSON.parse(customJson);
-          const matched = list.find((s: any) => String(s.id) === String(params.id));
+          const matched = list.find((s: any) => String(s.id).trim().toLowerCase() === idStr.toLowerCase());
           if (matched) {
             setSuspectName(matched.name);
             setSuspectAlias(matched.alias || '-');
@@ -111,7 +102,7 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
             setSuspectStatus(matched.status || 'ARRESTED');
             setSuspectCity(matched.city || 'Nagpur');
             setPhysicalDesc(matched.physicalDesc || 'Registered criminal suspect profile.');
-            setDistinguishingMarks(matched.distinguishingMarks || 'Scar/tattoo mark registered.');
+            setDistinguishingMarks(matched.distinguishingMarks || 'Scar/tattoo mark registered in database.');
             setPhotoUrl(matched.photoUrl || matched.photo || null);
             return;
           }
@@ -121,7 +112,7 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
       }
 
       // 2. Check DEFAULT_SUSPECT_MAP
-      const defaultData = DEFAULT_SUSPECT_MAP[params.id];
+      const defaultData = DEFAULT_SUSPECT_MAP[idStr];
       if (defaultData) {
         setSuspectName(defaultData.name);
         setSuspectAlias(defaultData.alias);
@@ -131,9 +122,38 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
         setPhysicalDesc(defaultData.physicalDesc);
         setDistinguishingMarks(defaultData.distinguishingMarks);
         setPhotoUrl(defaultData.photo);
+        return;
       }
+
+      // 3. Fallback for any other custom or unmapped ID
+      setSuspectName(`Suspect Record #${idStr}`);
+      setSuspectAlias('Unassigned Alias');
+      setThreatLevel('HIGH');
+      setSuspectStatus('ARRESTED');
+      setSuspectCity('Nagpur');
+      setPhysicalDesc('Active suspect under police investigation.');
+      setDistinguishingMarks('Physical traits registered in CCTNS.');
+      setPhotoUrl(null);
     }
   }, [params.id]);
+
+  const handleDeleteRecord = () => {
+    if (confirm(`Are you sure you want to permanently delete suspect record: "${suspectName}"?`)) {
+      if (typeof window !== 'undefined') {
+        const customJson = localStorage.getItem('custom_suspects');
+        if (customJson) {
+          try {
+            const list = JSON.parse(customJson);
+            const updated = list.filter((s: any) => String(s.id) !== String(params.id));
+            localStorage.setItem('custom_suspects', JSON.stringify(updated));
+          } catch {
+            // ignore
+          }
+        }
+      }
+      router.push('/suspects');
+    }
+  };
 
   const handleUpdateStatus = () => {
     setSuspectStatus(newStatus);
@@ -169,7 +189,7 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
     setShowLinkCaseModal(false);
   };
 
-  const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').substring(0, 2);
+  const getInitials = (name: string) => (name || 'Suspect').split(' ').map(n => n[0]).join('').substring(0, 2);
 
   const ThreatBadge = ({ level }: { level: string }) => {
     const colors: Record<string, string> = {
@@ -204,7 +224,7 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-white tracking-tight">{suspectName}</h1>
+              <h1 className="text-3xl font-bold text-white tracking-tight">{suspectName || 'Loading Suspect...'}</h1>
               <StatusBadge status={suspectStatus} />
               <ThreatBadge level={threatLevel} />
             </div>
