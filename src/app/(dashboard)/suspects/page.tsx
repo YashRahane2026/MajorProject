@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { Search, Filter, Plus, ChevronLeft, ChevronRight, Eye, ShieldAlert, UserCheck } from 'lucide-react';
+import { Search, Filter, Plus, ChevronLeft, ChevronRight, Eye, ShieldAlert, UserCheck, X } from 'lucide-react';
 
 const INITIAL_SUSPECTS = [
   { id: '1', name: 'Vikram Sharma', alias: 'Vicky', threatLevel: 'CRITICAL', status: 'AT_LARGE', city: 'Nagpur', cases: 3, lastUpdated: '2026-08-18' },
@@ -45,22 +44,12 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 export default function SuspectsPage() {
-  const searchParams = useSearchParams();
-  const queryParam = searchParams.get('q') || '';
-
   const [suspects, setSuspects] = useState(INITIAL_SUSPECTS);
-  const [searchTerm, setSearchTerm] = useState(queryParam);
+  const [searchTerm, setSearchTerm] = useState('');
   const [threatFilter, setThreatFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
-
-  // Sync search parameter from URL if present
-  useEffect(() => {
-    if (queryParam) {
-      setSearchTerm(queryParam);
-    }
-  }, [queryParam]);
 
   // Merge custom_suspects from localStorage on load
   useEffect(() => {
@@ -130,13 +119,21 @@ export default function SuspectsPage() {
             <input 
               type="text" 
               placeholder="Search suspects by name, alias, city..." 
-              className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg pl-9 pr-4 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
+              className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg pl-9 pr-9 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                setCurrentPage(1); // Reset to page 1 on search change
+                setCurrentPage(1);
               }}
             />
+            {searchTerm && (
+              <button 
+                onClick={() => { setSearchTerm(''); setCurrentPage(1); }} 
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
           <div className="flex gap-2 w-full sm:w-auto">
             <select 
