@@ -35,8 +35,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="h-screen w-full flex flex-col overflow-hidden bg-[hsl(222,47%,6%)] text-[hsl(210,40%,98%)]">
-      <SyntheticBanner />
-      
       <div className="flex flex-1 overflow-hidden">
         <AppSidebar 
           collapsed={collapsed} 
