@@ -59,7 +59,7 @@ export default function DatasetInspectorModal({ isOpen, onClose }: { isOpen: boo
             <button
               onClick={handleDownloadDataset}
               className="bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-purple-500/20 transition-all"
-              title="Download JSON dataset for panel review"
+              title="Download JSON dataset for offline analysis & verification"
             >
               <Download className="w-3.5 h-3.5" /> Export JSON
             </button>
@@ -103,7 +103,7 @@ export default function DatasetInspectorModal({ isOpen, onClose }: { isOpen: boo
               <div>
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-purple-400" />
-                  Live Synthetic Augmentation Pipeline (Panel Demonstration)
+                  Live Synthetic Augmentation Pipeline (Surveillance Simulation)
                 </h3>
                 <p className="text-xs text-slate-400">
                   Select a suspect below to inspect how data augmentations simulate low-light CCTV, angular tilt, and blur:

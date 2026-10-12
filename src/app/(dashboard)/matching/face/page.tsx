@@ -346,14 +346,11 @@ export default function FaceMatchingPage() {
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={() => setShowHowItWorks(true)}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-blue-500/30 transition-all border border-blue-400/40 hover:scale-[1.02] active:scale-95"
-            title="Open Interactive Multimodal AI Pipeline Animated Explanation for Panel"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-blue-500/20 transition-all border border-blue-400/30 hover:scale-[1.02] active:scale-95"
+            title="Open Interactive Multimodal AI Architecture & Pipeline Visualizer"
           >
             <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-            <span>🎬 Animated: How It Works</span>
-            <span className="bg-amber-400/20 text-amber-300 border border-amber-400/40 text-[9px] px-1.5 py-0.5 rounded uppercase tracking-wider font-extrabold animate-pulse">
-              ANIMATED
-            </span>
+            <span>How It Works: Multimodal AI</span>
           </button>
 
           <button
@@ -366,28 +363,6 @@ export default function FaceMatchingPage() {
           </button>
         </div>
       </header>
-
-      {/* Presentation Callout Banner */}
-      <div className="p-3.5 bg-gradient-to-r from-blue-900/30 via-indigo-900/20 to-purple-900/30 border border-blue-500/30 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-blue-200 shadow-md">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-blue-500/20 border border-blue-400/30 flex items-center justify-center flex-shrink-0">
-            <Sparkles className="w-4 h-4 text-amber-300 animate-spin" style={{ animationDuration: '6s' }} />
-          </div>
-          <div>
-            <p className="font-semibold text-white">Panel Presentation Helper: Dual Image + Name/Text Processing Animation</p>
-            <p className="text-[11px] text-blue-300/80">
-              Click <strong className="text-white underline cursor-pointer hover:text-amber-300" onClick={() => setShowHowItWorks(true)}>Animated: How It Works</strong> to walk through the 5-step animation showing how ArcFace image embeddings (512-D) and SBERT text embeddings (768-D) fuse simultaneously.
-            </p>
-          </div>
-        </div>
-        <button 
-          onClick={() => setShowHowItWorks(true)}
-          className="self-start sm:self-auto px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold flex items-center gap-1.5 shadow transition-all hover:scale-105 active:scale-95 flex-shrink-0 text-xs"
-        >
-          <span>Watch Animation</span>
-          <span>🎬</span>
-        </button>
-      </div>
 
       {/* Success alert banner when suspect is registered from search */}
       {registrationSuccessBanner && (
