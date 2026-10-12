@@ -15,6 +15,7 @@ import {
   Zap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import CaseLinkingHowItWorksModal from '@/components/modals/case-linking-how-it-works-modal';
 
 const mockFirs = [
   { id: 'FIR-2026-1042', text: 'FIR-2026-1042: Armed robbery at Sitabuldi Jewelry Store (Hammers & Grey SUV getaway)' },
@@ -74,6 +75,7 @@ export default function CasesMatchingPage() {
   const [customText, setCustomText] = useState('');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<typeof mockResults | null>(null);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
 
   const handleSearch = async () => {
     setLoading(true);
@@ -111,14 +113,24 @@ export default function CasesMatchingPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto text-slate-200">
-      <header className="flex items-center gap-3 mb-8 pb-4 border-b border-[hsl(217,33%,17%)]">
-        <div className="p-2 bg-indigo-500/10 rounded-lg">
-          <Link2 className="w-8 h-8 text-indigo-400" />
+      <header className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8 pb-4 border-b border-[hsl(217,33%,17%)]">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-indigo-400">
+            <Link2 className="w-8 h-8" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-white tracking-tight">Case Linking — FIR Modus Operandi (MO) Analysis</h1>
+            <p className="text-sm text-slate-400">Sentence-BERT (768-dim) semantic narrative similarity search to autolink unsolved crimes sharing a common MO signature.</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-white">Case Linking — FIR Modus Operandi (MO) Analysis</h1>
-          <p className="text-sm text-slate-400">Sentence-BERT (768-dim) semantic narrative similarity search to autolink unsolved crimes sharing a common MO signature.</p>
-        </div>
+
+        <button
+          onClick={() => setShowHowItWorks(true)}
+          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-indigo-500/20 transition-all border border-indigo-400/30 hover:scale-[1.02] active:scale-95 flex-shrink-0"
+        >
+          <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+          <span>How It Works: Case Linking (NLP)</span>
+        </button>
       </header>
 
       {/* NLP Banner */}
@@ -327,6 +339,12 @@ export default function CasesMatchingPage() {
           </div>
         </div>
       </div>
+
+      {/* Interactive Case Linking How It Works Modal */}
+      <CaseLinkingHowItWorksModal
+        isOpen={showHowItWorks}
+        onClose={() => setShowHowItWorks(false)}
+      />
     </div>
   );
 }

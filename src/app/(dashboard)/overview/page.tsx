@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Users, Briefcase, FileText, Target, TrendingUp, Clock, AlertTriangle, UserPlus, CheckCircle2 } from 'lucide-react';
+import CityCrimeMap from '@/components/dashboard/city-crime-map';
 
 export default function OverviewPage() {
   return (
@@ -42,44 +43,9 @@ export default function OverviewPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Chart Area */}
-        <div className="lg:col-span-2 bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold text-white">Crime Trends — Last 12 Months</h2>
-            <select className="bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] text-sm rounded-lg px-3 py-1 text-slate-300">
-              <option>All Crimes</option>
-              <option>Theft</option>
-              <option>Assault</option>
-              <option>Fraud</option>
-            </select>
-          </div>
-          <div className="h-64 flex items-end justify-between gap-2 border-b border-[hsl(217,33%,17%)] pb-2 relative">
-            {/* Grid lines */}
-            <div className="absolute inset-0 flex flex-col justify-between border-l border-[hsl(217,33%,17%)]">
-              {[100, 75, 50, 25, 0].map((val) => (
-                <div key={val} className="w-full border-t border-[hsl(217,33%,17%)] opacity-30 h-0 relative">
-                  <span className="absolute -left-6 -top-2.5 text-xs text-slate-500">{val}</span>
-                </div>
-              ))}
-            </div>
-            {/* Bars */}
-            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((month, i) => {
-              const height = Math.floor(Math.random() * 60) + 20;
-              return (
-                <div key={month} className="flex flex-col items-center flex-1 z-10 group">
-                  <div 
-                    className="w-full max-w-[2rem] bg-blue-500/80 hover:bg-blue-400 rounded-t-sm transition-all duration-300 relative"
-                    style={{ height: `${height}%` }}
-                  >
-                    <div className="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs py-1 px-2 rounded pointer-events-none transition-opacity">
-                      {height}
-                    </div>
-                  </div>
-                  <span className="text-xs text-slate-400 mt-2">{month}</span>
-                </div>
-              );
-            })}
-          </div>
+        {/* Main Geospatial Hotspot Map & 12-Month Trends Area */}
+        <div className="lg:col-span-2">
+          <CityCrimeMap />
         </div>
 
         {/* Activity Feed */}
