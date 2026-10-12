@@ -1,27 +1,22 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   MapPin, 
   TrendingUp, 
-  TrendingDown, 
-  AlertTriangle, 
   ShieldAlert, 
-  Sliders, 
   Activity, 
-  Layers, 
-  Eye, 
   Radio, 
-  Calendar,
-  Building,
-  Car,
-  DollarSign,
-  AlertOctagon,
-  FileText,
-  Clock,
-  Sparkles
+  Car, 
+  DollarSign, 
+  AlertOctagon, 
+  AlertTriangle,
+  Layers,
+  Crosshair,
+  Maximize2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import 'leaflet/dist/leaflet.css';
 
 export type CrimeTypeKey = 
   | 'all' 
@@ -36,10 +31,10 @@ interface HotspotZone {
   id: string;
   name: string;
   policeStation: string;
-  x: number; // percentage coordinate 0-100
-  y: number;
+  lat: number;
+  lng: number;
   count: number;
-  changePct: number; // e.g. +28 means +28% increase
+  changePct: number;
   severity: 'CRITICAL' | 'HIGH' | 'MODERATE' | 'STABLE';
   dominantMO: string;
   patrolRecommendation: string;
@@ -61,8 +56,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'sitabuldi',
       name: 'Sitabuldi Central',
       policeStation: 'Sitabuldi PS, Nagpur',
-      x: 48,
-      y: 50,
+      lat: 21.1466,
+      lng: 79.0827,
       count: 78,
       changePct: 28,
       severity: 'CRITICAL',
@@ -73,8 +68,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'sadar',
       name: 'Sadar & Civil Lines',
       policeStation: 'Sadar PS, Nagpur',
-      x: 52,
-      y: 34,
+      lat: 21.1605,
+      lng: 79.0825,
       count: 62,
       changePct: 34,
       severity: 'CRITICAL',
@@ -85,8 +80,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'dharampeth',
       name: 'Dharampeth & Law College',
       policeStation: 'Ambazari PS, Nagpur',
-      x: 32,
-      y: 46,
+      lat: 21.1412,
+      lng: 79.0583,
       count: 45,
       changePct: 14,
       severity: 'HIGH',
@@ -97,8 +92,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'dhantoli',
       name: 'Dhantoli & Medical Sq',
       policeStation: 'Dhantoli PS, Nagpur',
-      x: 50,
-      y: 65,
+      lat: 21.1328,
+      lng: 79.0910,
       count: 49,
       changePct: 19,
       severity: 'HIGH',
@@ -109,8 +104,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'pachpaoli',
       name: 'Pachpaoli & Railway Terminus',
       policeStation: 'Pachpaoli PS, Nagpur',
-      x: 65,
-      y: 38,
+      lat: 21.1592,
+      lng: 79.1065,
       count: 68,
       changePct: 38,
       severity: 'CRITICAL',
@@ -121,8 +116,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'lakadganj',
       name: 'Lakadganj & Itwari Trade',
       policeStation: 'Lakadganj PS, Nagpur',
-      x: 74,
-      y: 48,
+      lat: 21.1498,
+      lng: 79.1235,
       count: 58,
       changePct: 22,
       severity: 'CRITICAL',
@@ -133,8 +128,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'midc_hingna',
       name: 'MIDC Hingna Industrial',
       policeStation: 'MIDC PS, Nagpur',
-      x: 18,
-      y: 74,
+      lat: 21.1090,
+      lng: 78.9950,
       count: 41,
       changePct: 31,
       severity: 'CRITICAL',
@@ -145,8 +140,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'jaripatka',
       name: 'Jaripatka Ring',
       policeStation: 'Jaripatka PS, Nagpur',
-      x: 56,
-      y: 20,
+      lat: 21.1895,
+      lng: 79.0980,
       count: 36,
       changePct: 11,
       severity: 'MODERATE',
@@ -157,8 +152,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'nandanvan',
       name: 'Nandanvan & Hasanbagh',
       policeStation: 'Nandanvan PS, Nagpur',
-      x: 76,
-      y: 68,
+      lat: 21.1340,
+      lng: 79.1325,
       count: 44,
       changePct: 16,
       severity: 'HIGH',
@@ -169,8 +164,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'sonegaon',
       name: 'Sonegaon & Airport Rd',
       policeStation: 'Sonegaon PS, Nagpur',
-      x: 38,
-      y: 82,
+      lat: 21.0965,
+      lng: 79.0620,
       count: 33,
       changePct: -6,
       severity: 'STABLE',
@@ -181,8 +176,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'koradi',
       name: 'Koradi Highway Corridor',
       policeStation: 'Koradi PS, Nagpur',
-      x: 68,
-      y: 15,
+      lat: 21.2420,
+      lng: 79.1080,
       count: 27,
       changePct: 8,
       severity: 'MODERATE',
@@ -196,8 +191,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'sitabuldi',
       name: 'Sitabuldi Market',
       policeStation: 'Sitabuldi PS, Nagpur',
-      x: 48,
-      y: 50,
+      lat: 21.1466,
+      lng: 79.0827,
       count: 54,
       changePct: 32,
       severity: 'CRITICAL',
@@ -208,8 +203,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'lakadganj',
       name: 'Itwari Wholesale',
       policeStation: 'Lakadganj PS, Nagpur',
-      x: 74,
-      y: 48,
+      lat: 21.1498,
+      lng: 79.1235,
       count: 46,
       changePct: 24,
       severity: 'HIGH',
@@ -220,8 +215,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'pachpaoli',
       name: 'Pachpaoli Station',
       policeStation: 'Pachpaoli PS, Nagpur',
-      x: 65,
-      y: 38,
+      lat: 21.1592,
+      lng: 79.1065,
       count: 39,
       changePct: 18,
       severity: 'HIGH',
@@ -232,8 +227,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'dharampeth',
       name: 'Dharampeth Shopping',
       policeStation: 'Ambazari PS, Nagpur',
-      x: 32,
-      y: 46,
+      lat: 21.1412,
+      lng: 79.0583,
       count: 28,
       changePct: 9,
       severity: 'MODERATE',
@@ -244,8 +239,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'dhantoli',
       name: 'Dhantoli Clinics',
       policeStation: 'Dhantoli PS, Nagpur',
-      x: 50,
-      y: 65,
+      lat: 21.1328,
+      lng: 79.0910,
       count: 22,
       changePct: -4,
       severity: 'STABLE',
@@ -259,8 +254,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'pachpaoli',
       name: 'Pachpaoli & Hansapuri',
       policeStation: 'Pachpaoli PS, Nagpur',
-      x: 65,
-      y: 38,
+      lat: 21.1592,
+      lng: 79.1065,
       count: 36,
       changePct: 29,
       severity: 'CRITICAL',
@@ -271,8 +266,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'jaripatka',
       name: 'Jaripatka Colony',
       policeStation: 'Jaripatka PS, Nagpur',
-      x: 56,
-      y: 20,
+      lat: 21.1895,
+      lng: 79.0980,
       count: 26,
       changePct: 21,
       severity: 'HIGH',
@@ -283,8 +278,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'nandanvan',
       name: 'Hasanbagh Slums',
       policeStation: 'Nandanvan PS, Nagpur',
-      x: 76,
-      y: 68,
+      lat: 21.1340,
+      lng: 79.1325,
       count: 24,
       changePct: 15,
       severity: 'HIGH',
@@ -295,8 +290,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'sitabuldi',
       name: 'Sitabuldi Station Rd',
       policeStation: 'Sitabuldi PS, Nagpur',
-      x: 48,
-      y: 50,
+      lat: 21.1466,
+      lng: 79.0827,
       count: 18,
       changePct: 4,
       severity: 'MODERATE',
@@ -310,8 +305,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'sadar',
       name: 'Sadar Financial Core',
       policeStation: 'Sadar PS, Nagpur',
-      x: 52,
-      y: 34,
+      lat: 21.1605,
+      lng: 79.0825,
       count: 58,
       changePct: 45,
       severity: 'CRITICAL',
@@ -322,8 +317,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'dharampeth',
       name: 'Dharampeth IT Hub',
       policeStation: 'Ambazari PS, Nagpur',
-      x: 32,
-      y: 46,
+      lat: 21.1412,
+      lng: 79.0583,
       count: 42,
       changePct: 33,
       severity: 'CRITICAL',
@@ -334,8 +329,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'midc_hingna',
       name: 'Hingna IT Park',
       policeStation: 'MIDC PS, Nagpur',
-      x: 18,
-      y: 74,
+      lat: 21.1090,
+      lng: 78.9950,
       count: 31,
       changePct: 26,
       severity: 'HIGH',
@@ -346,8 +341,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'sitabuldi',
       name: 'Sitabuldi Banks',
       policeStation: 'Sitabuldi PS, Nagpur',
-      x: 48,
-      y: 50,
+      lat: 21.1466,
+      lng: 79.0827,
       count: 27,
       changePct: 12,
       severity: 'MODERATE',
@@ -361,8 +356,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'lakadganj',
       name: 'Sarafa Bullion Market',
       policeStation: 'Lakadganj PS, Nagpur',
-      x: 74,
-      y: 48,
+      lat: 21.1498,
+      lng: 79.1235,
       count: 38,
       changePct: 41,
       severity: 'CRITICAL',
@@ -373,8 +368,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'sitabuldi',
       name: 'Sitabuldi Central Hub',
       policeStation: 'Sitabuldi PS, Nagpur',
-      x: 48,
-      y: 50,
+      lat: 21.1466,
+      lng: 79.0827,
       count: 29,
       changePct: 26,
       severity: 'CRITICAL',
@@ -385,8 +380,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'midc_hingna',
       name: 'Hingna Warehouse Belt',
       policeStation: 'MIDC PS, Nagpur',
-      x: 18,
-      y: 74,
+      lat: 21.1090,
+      lng: 78.9950,
       count: 21,
       changePct: 18,
       severity: 'HIGH',
@@ -397,8 +392,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'nandanvan',
       name: 'Great Nag Road',
       policeStation: 'Nandanvan PS, Nagpur',
-      x: 76,
-      y: 68,
+      lat: 21.1340,
+      lng: 79.1325,
       count: 17,
       changePct: 6,
       severity: 'MODERATE',
@@ -412,8 +407,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'midc_hingna',
       name: 'Hingna Industrial Fringe',
       policeStation: 'MIDC PS, Nagpur',
-      x: 18,
-      y: 74,
+      lat: 21.1090,
+      lng: 78.9950,
       count: 44,
       changePct: 56,
       severity: 'CRITICAL',
@@ -424,8 +419,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'nandanvan',
       name: 'Nandanvan Highway',
       policeStation: 'Nandanvan PS, Nagpur',
-      x: 76,
-      y: 68,
+      lat: 21.1340,
+      lng: 79.1325,
       count: 39,
       changePct: 37,
       severity: 'CRITICAL',
@@ -436,8 +431,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'pachpaoli',
       name: 'Railway Yards Pachpaoli',
       policeStation: 'Pachpaoli PS, Nagpur',
-      x: 65,
-      y: 38,
+      lat: 21.1592,
+      lng: 79.1065,
       count: 28,
       changePct: 22,
       severity: 'HIGH',
@@ -448,8 +443,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'koradi',
       name: 'Koradi Bypass',
       policeStation: 'Koradi PS, Nagpur',
-      x: 68,
-      y: 15,
+      lat: 21.2420,
+      lng: 79.1080,
       count: 23,
       changePct: 14,
       severity: 'MODERATE',
@@ -463,8 +458,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'pachpaoli',
       name: 'Nagpur Central Station',
       policeStation: 'Pachpaoli PS, Nagpur',
-      x: 65,
-      y: 38,
+      lat: 21.1592,
+      lng: 79.1065,
       count: 59,
       changePct: 44,
       severity: 'CRITICAL',
@@ -475,8 +470,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'sonegaon',
       name: 'Wardha Rd Metro & Airport',
       policeStation: 'Sonegaon PS, Nagpur',
-      x: 38,
-      y: 82,
+      lat: 21.0965,
+      lng: 79.0620,
       count: 48,
       changePct: 35,
       severity: 'CRITICAL',
@@ -487,8 +482,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'dhantoli',
       name: 'Medical Hospital Parking',
       policeStation: 'Dhantoli PS, Nagpur',
-      x: 50,
-      y: 65,
+      lat: 21.1328,
+      lng: 79.0910,
       count: 41,
       changePct: 27,
       severity: 'HIGH',
@@ -499,8 +494,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'sitabuldi',
       name: 'Sitabuldi Multi-Level',
       policeStation: 'Sitabuldi PS, Nagpur',
-      x: 48,
-      y: 50,
+      lat: 21.1466,
+      lng: 79.0827,
       count: 36,
       changePct: 16,
       severity: 'HIGH',
@@ -511,8 +506,8 @@ const ZONE_DATA_BY_CRIME: Record<CrimeTypeKey, HotspotZone[]> = {
       id: 'sadar',
       name: 'Residency Road',
       policeStation: 'Sadar PS, Nagpur',
-      x: 52,
-      y: 34,
+      lat: 21.1605,
+      lng: 79.0825,
       count: 24,
       changePct: -3,
       severity: 'STABLE',
@@ -539,16 +534,159 @@ export default function CityCrimeMap() {
   const [selectedCrime, setSelectedCrime] = useState<CrimeTypeKey>('all');
   const [activeTab, setActiveTab] = useState<'map' | 'trends'>('map');
   const [selectedZone, setSelectedZone] = useState<HotspotZone | null>(null);
+  const [tileMode, setTileMode] = useState<'dark' | 'osm'>('dark');
+
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markersLayerRef = useRef<any>(null);
 
   const zones = ZONE_DATA_BY_CRIME[selectedCrime] || ZONE_DATA_BY_CRIME.all;
   const trendPoints = MONTHLY_TREND_DATA[selectedCrime] || MONTHLY_TREND_DATA.all;
   const maxTrend = Math.max(...trendPoints) * 1.15;
 
   const currentOption = CRIME_TYPE_OPTIONS.find(c => c.id === selectedCrime) || CRIME_TYPE_OPTIONS[0];
-
   const criticalCount = zones.filter(z => z.severity === 'CRITICAL').length;
   const totalIncidents = zones.reduce((sum, z) => sum + z.count, 0);
   const highestSurgeZone = [...zones].sort((a, b) => b.changePct - a.changePct)[0];
+
+  // Initialize and update Leaflet Map
+  useEffect(() => {
+    if (activeTab !== 'map' || !mapContainerRef.current) return;
+
+    let isMounted = true;
+
+    // Dynamically import Leaflet on client side
+    import('leaflet').then((L) => {
+      if (!isMounted || !mapContainerRef.current) return;
+
+      // Initialize map instance if not already initialized
+      if (!mapInstanceRef.current) {
+        const map = L.map(mapContainerRef.current, {
+          center: [21.1458, 79.0882], // Central Nagpur coordinates
+          zoom: 12,
+          minZoom: 10,
+          maxZoom: 17,
+          zoomControl: false,
+          attributionControl: false
+        });
+
+        // Add Zoom Control to bottom-right
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        mapInstanceRef.current = map;
+      }
+
+      const map = mapInstanceRef.current;
+
+      // Update Tile Layer
+      map.eachLayer((layer: any) => {
+        if (layer instanceof L.TileLayer) {
+          map.removeLayer(layer);
+        }
+      });
+
+      const tileUrl = tileMode === 'dark'
+        ? 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png'
+        : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+
+      L.tileLayer(tileUrl, {
+        maxZoom: 19,
+        subdomains: 'abcd'
+      }).addTo(map);
+
+      // Remove existing marker layer if present
+      if (markersLayerRef.current) {
+        map.removeLayer(markersLayerRef.current);
+      }
+
+      const markersGroup = L.layerGroup().addTo(map);
+      markersLayerRef.current = markersGroup;
+
+      // Add Cluster Bubbles with real Lat/Lng
+      zones.forEach((zone) => {
+        const isCritical = zone.severity === 'CRITICAL';
+        const isHigh = zone.severity === 'HIGH';
+
+        const bubbleColor = isCritical ? '#ef4444' : isHigh ? '#f59e0b' : zone.severity === 'MODERATE' ? '#3b82f6' : '#10b981';
+        const ringPingClass = isCritical ? 'animate-ping' : '';
+
+        const iconHtml = `
+          <div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+            ${isCritical ? `
+              <div class="${ringPingClass}" style="position: absolute; inset: 0; border-radius: 9999px; background-color: ${bubbleColor}; opacity: 0.4;"></div>
+            ` : ''}
+            <div style="
+              width: 36px; 
+              height: 36px; 
+              border-radius: 9999px; 
+              background-color: ${bubbleColor}; 
+              border: 2px solid white; 
+              box-shadow: 0 4px 14px rgba(0,0,0,0.5); 
+              display: flex; 
+              align-items: center; 
+              justify-content: center; 
+              color: white; 
+              font-family: monospace; 
+              font-weight: 800; 
+              font-size: 13px;
+              z-index: 10;
+            ">
+              ${zone.count}
+            </div>
+            <div style="
+              position: absolute; 
+              top: 38px; 
+              left: 50%; 
+              transform: translateX(-50%); 
+              white-space: nowrap; 
+              background: rgba(15, 23, 42, 0.95); 
+              border: 1px solid #334155; 
+              border-radius: 6px; 
+              padding: 2px 6px; 
+              font-size: 10px; 
+              font-weight: 700; 
+              color: #f8fafc;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+              pointer-events: none;
+              z-index: 20;
+            ">
+              ${zone.name} <span style="color: ${zone.changePct > 0 ? '#f87171' : '#34d399'}; font-family: monospace;">${zone.changePct > 0 ? '+' : ''}${zone.changePct}%</span>
+            </div>
+          </div>
+        `;
+
+        const customIcon = L.divIcon({
+          html: iconHtml,
+          className: 'custom-cluster-icon',
+          iconSize: [44, 44],
+          iconAnchor: [22, 22]
+        });
+
+        const marker = L.marker([zone.lat, zone.lng], { icon: customIcon });
+
+        marker.on('click', () => {
+          setSelectedZone(zone);
+        });
+
+        marker.addTo(markersGroup);
+      });
+
+      // Force recalculation of map container dimensions
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 200);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeTab, selectedCrime, tileMode, zones]);
+
+  const handleRecenter = () => {
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.setView([21.1458, 79.0882], 12);
+    }
+  };
 
   return (
     <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-2xl overflow-hidden shadow-xl">
@@ -558,14 +696,14 @@ export default function CityCrimeMap() {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-              <span>Nagpur Police GIS: Crime Hotspots &amp; Trends</span>
+              <span>Nagpur Police GIS: Real City Hotspot Map</span>
             </h2>
             <span className="text-[11px] bg-blue-500/10 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded font-mono font-medium">
-              Metropolitan Jurisdiction
+              OpenStreetMap &amp; CartoDB GIS
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Real-time geospatial incident cluster bubbles with algorithmic YoY growth velocity tracking.
+            Real interactive city streets, arterial highways, and police jurisdictions with live cluster bubble density.
           </p>
         </div>
 
@@ -583,7 +721,7 @@ export default function CityCrimeMap() {
               )}
             >
               <MapPin className="w-3.5 h-3.5" />
-              <span>Hotspot Map</span>
+              <span>Real City Map</span>
             </button>
             <button
               onClick={() => setActiveTab('trends')}
@@ -649,143 +787,45 @@ export default function CityCrimeMap() {
       {/* Main View Area */}
       <div className="p-4 sm:p-6">
         
-        {/* TAB 1: GEOSPATIAL MAP VIEW */}
+        {/* TAB 1: REAL MAP VIEW (LEAFLET + REAL STREETS) */}
         {activeTab === 'map' && (
           <div className="space-y-4">
             
-            {/* Vector Schematic Map Canvas */}
-            <div className="relative w-full h-[400px] sm:h-[450px] bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 shadow-inner select-none">
-              
-              {/* Background Grid & Blueprint Waterways/Roads */}
-              <svg className="absolute inset-0 w-full h-full opacity-40 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                  <pattern id="nagpur-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" strokeWidth="0.8"/>
-                  </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#nagpur-grid)" />
-                
-                {/* Major Nagpur Arterial Roads / Highway Network */}
-                {/* NH-44 North-South (Kamptee -> Wardha Rd) */}
-                <path d="M 68% 5% Q 55% 45% 38% 95%" stroke="#334155" strokeWidth="3" fill="none" strokeDasharray="6 3" />
-                {/* NH-53 East-West (Amravati -> Bhandara Rd) */}
-                <path d="M 5% 55% Q 50% 50% 95% 48%" stroke="#334155" strokeWidth="3" fill="none" strokeDasharray="6 3" />
-                {/* Ring Road Loop */}
-                <circle cx="50%" cy="50%" r="36%" stroke="#1e293b" strokeWidth="2.5" fill="none" strokeDasharray="4 4" />
-                {/* Ambazari Lake Contour */}
-                <ellipse cx="28%" cy="58%" rx="5%" ry="3%" fill="#0284c7" opacity="0.18" />
-                {/* Futala Lake Contour */}
-                <ellipse cx="30%" cy="40%" rx="4%" ry="2.5%" fill="#0284c7" opacity="0.18" />
-              </svg>
-
-              {/* Geographical Watermarks & Landmarks */}
-              <div className="absolute top-3 left-4 text-[10px] text-slate-500 font-mono flex items-center gap-1 pointer-events-none">
-                <span className="w-2 h-2 rounded-full bg-cyan-500/40" />
-                <span>Nagpur Metropolitan Area — Scale: 1:50,000</span>
-              </div>
-              <div className="absolute bottom-3 left-4 text-[10px] text-slate-600 font-mono pointer-events-none">
-                Futala Lake / Ambazari Basin
-              </div>
-              <div className="absolute top-3 right-4 text-[10px] text-slate-600 font-mono pointer-events-none">
-                Koradi / Kamptee Sector
+            {/* Map Controls Floating Bar */}
+            <div className="flex justify-between items-center text-xs">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setTileMode(tileMode === 'dark' ? 'osm' : 'dark')}
+                  className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 hover:bg-slate-800 text-slate-300 font-medium flex items-center gap-1.5 transition-colors"
+                  title="Toggle between Tactical Dark Mode and OpenStreetMap Road Mode"
+                >
+                  <Layers className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Tile: {tileMode === 'dark' ? 'Tactical Dark' : 'Standard Roads (OSM)'}</span>
+                </button>
+                <button
+                  onClick={handleRecenter}
+                  className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 hover:bg-slate-800 text-slate-300 font-medium flex items-center gap-1.5 transition-colors"
+                  title="Center map on Nagpur"
+                >
+                  <Crosshair className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Center Nagpur</span>
+                </button>
               </div>
 
-              {/* Dynamic Cluster Bubbles */}
-              {zones.map((zone) => {
-                const isSelected = selectedZone?.id === zone.id;
-                
-                // Radius mapping based on count (16px to 38px)
-                const baseRadius = Math.min(38, Math.max(16, 14 + zone.count * 0.35));
-                
-                // Color mapping
-                const colorMap = {
-                  CRITICAL: {
-                    bg: 'bg-red-500/85',
-                    border: 'border-red-400',
-                    pulse: 'bg-red-500/40',
-                    glow: 'shadow-red-500/40'
-                  },
-                  HIGH: {
-                    bg: 'bg-amber-500/85',
-                    border: 'border-amber-400',
-                    pulse: 'bg-amber-500/30',
-                    glow: 'shadow-amber-500/30'
-                  },
-                  MODERATE: {
-                    bg: 'bg-blue-500/85',
-                    border: 'border-blue-400',
-                    pulse: 'bg-blue-500/20',
-                    glow: 'shadow-blue-500/20'
-                  },
-                  STABLE: {
-                    bg: 'bg-emerald-500/85',
-                    border: 'border-emerald-400',
-                    pulse: 'bg-emerald-500/20',
-                    glow: 'shadow-emerald-500/20'
-                  }
-                };
+              <span className="text-[11px] text-slate-500 font-mono hidden sm:inline">
+                Scroll to zoom • Drag to pan across Nagpur city roads
+              </span>
+            </div>
 
-                const currentColors = colorMap[zone.severity];
+            {/* Real Interactive Leaflet Container */}
+            <div className="relative w-full h-[450px] sm:h-[500px] rounded-2xl overflow-hidden border border-slate-800 shadow-2xl">
+              <div 
+                ref={mapContainerRef} 
+                className="w-full h-full bg-slate-950 z-10" 
+              />
 
-                return (
-                  <div
-                    key={zone.id}
-                    onClick={() => setSelectedZone(isSelected ? null : zone)}
-                    style={{ left: `${zone.x}%`, top: `${zone.y}%` }}
-                    className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer group z-20 transition-transform duration-200 hover:scale-125"
-                  >
-                    {/* Animated Pulsing Radar Ring for CRITICAL surge */}
-                    {zone.severity === 'CRITICAL' && (
-                      <div 
-                        className={cn(
-                          "absolute inset-0 rounded-full animate-ping pointer-events-none",
-                          currentColors.pulse
-                        )}
-                        style={{ width: baseRadius * 2, height: baseRadius * 2, margin: -baseRadius * 0 }}
-                      />
-                    )}
-
-                    {/* Main Cluster Circle */}
-                    <div 
-                      className={cn(
-                        "rounded-full border-2 flex items-center justify-center font-bold text-white font-mono shadow-lg transition-all",
-                        currentColors.bg,
-                        currentColors.border,
-                        currentColors.glow,
-                        isSelected ? "ring-4 ring-white scale-110" : ""
-                      )}
-                      style={{ 
-                        width: `${baseRadius * 2}px`, 
-                        height: `${baseRadius * 2}px` 
-                      }}
-                      title={`${zone.name}: ${zone.count} cases (${zone.changePct > 0 ? '+' : ''}${zone.changePct}%)`}
-                    >
-                      <span className="text-xs leading-none drop-shadow">{zone.count}</span>
-                    </div>
-
-                    {/* Zone Name Label Badge */}
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 whitespace-nowrap pointer-events-none">
-                      <span className={cn(
-                        "text-[10px] font-semibold px-2 py-0.5 rounded-md border shadow transition-colors",
-                        isSelected 
-                          ? "bg-white text-slate-950 border-white font-bold" 
-                          : "bg-slate-950/90 text-slate-300 border-slate-800 group-hover:text-white"
-                      )}>
-                        {zone.name}
-                        <span className={cn(
-                          "ml-1 font-mono text-[9px]",
-                          zone.changePct > 0 ? "text-red-400 font-bold" : "text-emerald-400"
-                        )}>
-                          {zone.changePct > 0 ? `+${zone.changePct}%` : `${zone.changePct}%`}
-                        </span>
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* Map Legend */}
-              <div className="absolute bottom-3 right-4 bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 text-[10px] space-y-1.5 shadow-lg backdrop-blur-sm z-30">
+              {/* Map Legend (Floating in corner) */}
+              <div className="absolute bottom-4 left-4 bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 text-[10px] space-y-1.5 shadow-xl backdrop-blur-md z-30 pointer-events-none">
                 <span className="font-semibold text-slate-300 block mb-1">Incident Velocity:</span>
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
@@ -804,7 +844,6 @@ export default function CityCrimeMap() {
                   <span className="text-slate-300">Stable / Decreasing</span>
                 </div>
               </div>
-
             </div>
 
             {/* Selected Zone Deep-Dive Dossier HUD */}
@@ -864,7 +903,7 @@ export default function CityCrimeMap() {
               </div>
             ) : (
               <div className="p-3 bg-slate-900/40 border border-slate-800/80 rounded-xl text-center text-xs text-slate-400">
-                💡 <em>Click any cluster circle above on the Nagpur City map to inspect station jurisdiction, primary MO signatures, and automated patrol suggestions.</em>
+                💡 <em>Click any cluster bubble on the real Nagpur map to inspect station jurisdiction, primary MO signatures, and automated patrol suggestions.</em>
               </div>
             )}
 
