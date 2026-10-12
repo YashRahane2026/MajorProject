@@ -346,10 +346,10 @@ export default function FaceMatchingPage() {
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={() => setShowHowItWorks(true)}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-blue-500/20 transition-all border border-blue-400/30 hover:scale-[1.02] active:scale-95"
+            className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium flex items-center gap-2 border border-slate-700 transition-colors"
             title="Open Interactive Multimodal AI Architecture & Pipeline Visualizer"
           >
-            <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+            <Sparkles className="w-3.5 h-3.5 text-slate-400" />
             <span>How It Works: Multimodal AI</span>
           </button>
 

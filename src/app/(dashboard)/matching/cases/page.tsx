@@ -126,10 +126,10 @@ export default function CasesMatchingPage() {
 
         <button
           onClick={() => setShowHowItWorks(true)}
-          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-semibold flex items-center gap-2 shadow-lg shadow-indigo-500/20 transition-all border border-indigo-400/30 hover:scale-[1.02] active:scale-95 flex-shrink-0"
+          className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium flex items-center gap-2 border border-slate-700 transition-colors flex-shrink-0"
         >
-          <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-          <span>How It Works: Case Linking (NLP)</span>
+          <Sparkles className="w-3.5 h-3.5 text-slate-400" />
+          <span>How It Works: Case Linking</span>
         </button>
       </header>
 
