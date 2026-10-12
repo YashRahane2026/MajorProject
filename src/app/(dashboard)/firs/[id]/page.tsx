@@ -175,6 +175,48 @@ export default function FIRDetailPage({ params }: { params: { id: string } }) {
               ))}
             </div>
           </div>
+
+          {/* Physical Evidence Locker & Forensic Status */}
+          <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl overflow-hidden shadow-sm">
+            <div className="p-4 border-b border-[hsl(217,33%,17%)] bg-slate-900/40 flex justify-between items-center">
+              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" /> Physical Evidence Locker & Forensic Status
+              </h3>
+              <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-mono">CHAIN OF CUSTODY</span>
+            </div>
+            <div className="p-4 divide-y divide-slate-800 text-xs">
+              <div className="py-2.5 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🔨</span>
+                  <div>
+                    <p className="text-slate-200 font-medium">Heavy Sledgehammer (Fibreglass Handle)</p>
+                    <p className="text-slate-500 text-[11px]">Seized at Sitabuldi Jewelry crime scene</p>
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-mono text-[10px] border border-emerald-500/30">RECOVERED</span>
+              </div>
+              <div className="py-2.5 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">📹</span>
+                  <div>
+                    <p className="text-slate-200 font-medium">CCTV Surveillance DVR (2 Angles, 1080p)</p>
+                    <p className="text-slate-500 text-[11px]">Timestamp: 10/08/2026 14:28:10 – 14:31:40</p>
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 rounded bg-blue-500/15 text-blue-400 font-mono text-[10px] border border-blue-500/30">PRESERVED</span>
+              </div>
+              <div className="py-2.5 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🚗</span>
+                  <div>
+                    <p className="text-slate-200 font-medium">Grey SUV Tyre Tread Cast & CCTV Trace</p>
+                    <p className="text-slate-500 text-[11px]">Getaway trajectory towards Amravati Highway</p>
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 rounded bg-amber-500/15 text-amber-400 font-mono text-[10px] border border-amber-500/30">UNDER TRACE</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Right Column - Similar FIRs & NLP MO Comparison */}

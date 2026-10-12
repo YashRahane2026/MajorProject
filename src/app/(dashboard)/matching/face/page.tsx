@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { 
   ScanFace, 
   Zap, 
@@ -15,10 +16,12 @@ import {
   FileCheck,
   Building,
   UserCheck,
+  UserPlus,
   Info,
   Sparkles,
   Layers,
-  Search
+  Search,
+  Check
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -96,6 +99,16 @@ export default function FaceMatchingPage() {
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Quick Register Modal State (When no match is found or identity is new)
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [newSuspectName, setNewSuspectName] = useState('');
+  const [newSuspectAlias, setNewSuspectAlias] = useState('');
+  const [newSuspectThreat, setNewSuspectThreat] = useState('HIGH');
+  const [newSuspectStatus, setNewSuspectStatus] = useState('ARRESTED');
+  const [newSuspectCity, setNewSuspectCity] = useState('Nagpur');
+  const [newSuspectDesc, setNewSuspectDesc] = useState('');
+  const [registrationSuccessBanner, setRegistrationSuccessBanner] = useState<string | null>(null);
+
   // Load custom suspects registered via /suspects/new
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -125,6 +138,7 @@ export default function FaceMatchingPage() {
       reader.readAsDataURL(file);
       setResults(null);
       setErrorMessage(null);
+      setRegistrationSuccessBanner(null);
     }
   };
 
@@ -153,27 +167,12 @@ export default function FaceMatchingPage() {
     }
   };
 
-  const selectSamplePhoto = (url: string, name: string) => {
-    setPreviewUrl(url);
-    setIsKnownNonFace(false);
-    setSelectedFile(new File(['sample'], `${name.toLowerCase().replace(/\s+/g, '_')}.jpg`, { type: 'image/jpeg' }));
-    setResults(null);
-    setErrorMessage(null);
-  };
-
-  const selectCustomSuspectPhoto = (suspect: any) => {
-    setPreviewUrl(suspect.photoUrl || suspect.photo);
-    setIsKnownNonFace(false);
-    setSelectedFile(new File(['custom'], 'custom_suspect.jpg', { type: 'image/jpeg' }));
-    setResults(null);
-    setErrorMessage(null);
-  };
-
   const removePhoto = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
     setResults(null);
     setErrorMessage(null);
+    setRegistrationSuccessBanner(null);
     setIsKnownNonFace(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -187,6 +186,7 @@ export default function FaceMatchingPage() {
     setLoading(true);
     setResults(null);
     setErrorMessage(null);
+    setRegistrationSuccessBanner(null);
 
     // 1. Pixel analysis for skin-tone validation
     let hasHumanFace = true;
@@ -240,6 +240,53 @@ export default function FaceMatchingPage() {
     setResults(filtered);
   };
 
+  const handleQuickRegisterSuspect = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSuspectName.trim()) {
+      alert('Please enter a suspect name.');
+      return;
+    }
+
+    const newId = `custom_${Date.now()}`;
+    const newSuspect = {
+      id: newId,
+      name: newSuspectName.trim(),
+      alias: newSuspectAlias.trim() || '-',
+      threatLevel: newSuspectThreat,
+      status: newSuspectStatus,
+      city: newSuspectCity.trim() || 'Nagpur',
+      physicalDesc: newSuspectDesc.trim() || 'Biometric mugshot indexed via ArcFace Facial Recognition search.',
+      distinguishingMarks: 'Mugshot biometric profile indexed.',
+      cases: 1,
+      lastUpdated: new Date().toISOString().split('T')[0],
+      photoUrl: previewUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300',
+    };
+
+    const updated = [newSuspect, ...customSuspects];
+    setCustomSuspects(updated);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('custom_suspects', JSON.stringify(updated));
+    }
+
+    setShowRegisterModal(false);
+    setRegistrationSuccessBanner(`✅ Suspect "${newSuspect.name}" (ID: SUS-${newId}) has been registered and indexed into the database!`);
+
+    // Show the newly registered suspect as Match #1 (99.8%)
+    setResults([
+      {
+        id: newId,
+        name: newSuspect.name,
+        alias: newSuspect.alias,
+        score: 99.8,
+        threat: newSuspect.threatLevel,
+        status: newSuspect.status,
+        photo: newSuspect.photoUrl,
+      },
+      ...(results || []).filter(r => r.id !== newId)
+    ]);
+  };
+
   const getScoreColor = (score: number) => {
     if (score >= 90) return 'bg-emerald-500';
     if (score >= 70) return 'bg-amber-500';
@@ -267,6 +314,19 @@ export default function FaceMatchingPage() {
         </div>
       </header>
 
+      {/* Success alert banner when suspect is registered from search */}
+      {registrationSuccessBanner && (
+        <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-300 flex items-center justify-between animate-fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="w-5 h-5 text-emerald-400" />
+            <span className="text-sm font-semibold">{registrationSuccessBanner}</span>
+          </div>
+          <button onClick={() => setRegistrationSuccessBanner(null)} className="text-emerald-400 hover:text-white">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Panel - Upload & Controls */}
         <div className="lg:col-span-4 space-y-6">
@@ -278,7 +338,7 @@ export default function FaceMatchingPage() {
               {previewUrl && (
                 <button 
                   onClick={removePhoto}
-                  className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-2 py-1 rounded border border-red-500/20 transition-colors"
+                  className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 transition-colors"
                 >
                   <X className="w-3.5 h-3.5" /> Remove
                 </button>
@@ -329,64 +389,66 @@ export default function FaceMatchingPage() {
               </div>
             )}
 
-
-
             {/* Threshold Slider */}
             <div className="space-y-3 mb-6 bg-slate-900/60 p-4 rounded-xl border border-slate-800">
-              <div className="flex justify-between items-center">
-                <label className="text-xs font-semibold uppercase tracking-wider text-slate-300">Confidence Threshold</label>
-                <span className="text-xs font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded font-bold">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-semibold text-slate-300">Similarity Cutoff:</span>
+                <span className="font-mono text-blue-400 font-bold bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">
                   {(threshold * 100).toFixed(0)}%
                 </span>
               </div>
               <input 
                 type="range" 
                 min="0.50" 
-                max="0.99" 
-                step="0.01" 
-                value={threshold} 
+                max="0.95" 
+                step="0.05"
+                value={threshold}
                 onChange={(e) => setThreshold(parseFloat(e.target.value))}
-                className="w-full accent-blue-500"
+                className="w-full accent-blue-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer" 
               />
-              <div className="flex justify-between text-[10px] text-slate-500 font-mono">
-                <span>50% (Broad search)</span>
-                <span>99% (Strict precision)</span>
-              </div>
+              <p className="text-[11px] text-slate-500 leading-tight">
+                Recommended threshold: 70% for repeat offender alias screening.
+              </p>
             </div>
 
-            {/* CTA Button */}
             <button 
               onClick={handleMatch}
               disabled={loading || !previewUrl}
-              className={cn(
-                "w-full font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-xl",
-                previewUrl 
-                  ? "bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/25" 
-                  : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"
-              )}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/20 text-sm"
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Extracting 512-dim ArcFace Vector...
+                </>
               ) : (
-                <Zap className="w-5 h-5" />
+                <>
+                  <ScanFace className="w-4 h-4" />
+                  Run Face Biometric Match
+                </>
               )}
-              {loading ? 'Scanning & Vectorizing Face...' : 'Run Face Biometric Match'}
             </button>
           </div>
         </div>
 
-        {/* Right Panel - Results & Errors */}
-        <div className="lg:col-span-8">
-          <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-5 min-h-[500px] shadow-xl">
-            <h2 className="text-lg font-semibold text-white mb-4 flex items-center justify-between border-b border-[hsl(217,33%,17%)] pb-3">
-              <span>Biometric Match Output</span>
-              {results && (
-                <span className="text-xs font-mono text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded">
-                  ArcFace 512-d
-                </span>
+        {/* Right Panel - Candidate Matches */}
+        <div className="lg:col-span-8 space-y-4">
+          <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-5 shadow-xl min-h-[460px]">
+            <div className="flex justify-between items-center mb-6 pb-3 border-b border-[hsl(217,33%,17%)]">
+              <div>
+                <h2 className="text-base font-semibold text-white">ArcFace Candidate Matches</h2>
+                <p className="text-xs text-slate-400">Ranked by cosine similarity over 512-dimensional continuous facial embeddings</p>
+              </div>
+              {previewUrl && (
+                <button
+                  onClick={() => setShowRegisterModal(true)}
+                  className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                >
+                  <UserPlus className="w-3.5 h-3.5" /> Register Unidentified Suspect
+                </button>
               )}
-            </h2>
-            
+            </div>
+
             {/* Error Alert when non-face image is uploaded */}
             {errorMessage && (
               <div className="p-5 bg-red-500/10 border border-red-500/30 rounded-xl text-red-300 space-y-3 mb-6 animate-fade-in">
@@ -408,7 +470,7 @@ export default function FaceMatchingPage() {
                 <ScanFace className="w-14 h-14 mb-3 opacity-25 text-blue-400" />
                 <p className="text-slate-200 font-bold text-base mb-1">No Biometric Search Executed</p>
                 <p className="text-xs text-slate-400 max-w-sm">
-                  Upload a mugshot photo or select a suspect on the left panel, then click "Run Face Biometric Match".
+                  Upload a mugshot photo on the left panel, then click "Run Face Biometric Match".
                 </p>
               </div>
             )}
@@ -441,9 +503,28 @@ export default function FaceMatchingPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center gap-3 text-amber-400">
-                    <Info className="w-5 h-5 flex-shrink-0 text-amber-400" />
-                    <p className="text-sm font-medium">Face Identified • 0 candidate matches found exceeding your {(threshold * 100).toFixed(0)}% threshold limit. Try lowering the threshold slider.</p>
+                  /* 0 MATCHES FOUND -> OFFER IMMEDIATE REGISTRATION */
+                  <div className="p-6 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-2xl text-amber-300 space-y-4 animate-fade-in">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2.5 bg-amber-500/20 rounded-xl text-amber-400">
+                        <UserPlus className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-white">Unidentified Face (No Matches in Database)</h3>
+                        <p className="text-xs text-amber-200/90 mt-1 leading-relaxed">
+                          The extracted ArcFace facial embedding does not match any known offender exceeding your {(threshold * 100).toFixed(0)}% confidence threshold.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 pt-2">
+                      <button
+                        onClick={() => setShowRegisterModal(true)}
+                        className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-lg shadow-blue-500/20 transition-all"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        Register as New Suspect Record
+                      </button>
+                    </div>
                   </div>
                 )}
 
@@ -460,7 +541,9 @@ export default function FaceMatchingPage() {
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold text-white truncate text-base">{result.name}</h3>
+                          <Link href={`/suspects/${result.id}`} className="font-bold text-white hover:text-blue-400 transition-colors truncate text-base">
+                            {result.name}
+                          </Link>
                           {result.alias !== '-' && (
                             <span className="text-xs px-2 py-0.5 bg-slate-800 text-slate-300 rounded-full border border-slate-700 font-mono">
                               aka {result.alias}
@@ -494,17 +577,154 @@ export default function FaceMatchingPage() {
                         </div>
                       </div>
 
-                      <a href={`/suspects/1`} className="flex-shrink-0 ml-2 p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors">
+                      <Link href={`/suspects/${result.id}`} className="flex-shrink-0 ml-2 p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors" title="View Full Suspect Profile">
                         <ExternalLink className="w-5 h-5" />
-                      </a>
+                      </Link>
                     </div>
                   ))}
                 </div>
+
+                {/* Footer action if candidates exist but none match */}
+                {results.length > 0 && (
+                  <div className="p-4 bg-slate-900/60 border border-slate-800 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+                    <p>None of these candidate profiles match this person?</p>
+                    <button
+                      onClick={() => setShowRegisterModal(true)}
+                      className="bg-slate-800 hover:bg-slate-700 text-blue-400 border border-blue-500/30 px-3.5 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition-colors"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" /> Register as New Suspect
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Quick Register Suspect Modal */}
+      {showRegisterModal && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+          <form onSubmit={handleQuickRegisterSuspect} className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4 animate-fade-in">
+            <div className="flex justify-between items-center border-b border-[hsl(217,33%,17%)] pb-3">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-blue-400" /> Register Unidentified Suspect
+              </h3>
+              <button type="button" onClick={() => setShowRegisterModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Photo preview in modal */}
+            {previewUrl && (
+              <div className="flex items-center gap-3 p-3 bg-slate-900/80 border border-slate-800 rounded-xl">
+                <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-950 flex-shrink-0 border border-slate-700">
+                  <img src={previewUrl} alt="Detected Face" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-white">Detected Facial Mugshot Attached</p>
+                  <p className="text-[11px] text-emerald-400 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> ArcFace 512-dim embedding ready for indexing
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-3 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-slate-300 font-semibold block mb-1">Full Name <span className="text-red-400">*</span></label>
+                  <input 
+                    required
+                    type="text" 
+                    value={newSuspectName} 
+                    onChange={(e) => setNewSuspectName(e.target.value)} 
+                    placeholder="e.g. Arjun Mehta"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500" 
+                  />
+                </div>
+                <div>
+                  <label className="text-slate-300 font-semibold block mb-1">Known Alias</label>
+                  <input 
+                    type="text" 
+                    value={newSuspectAlias} 
+                    onChange={(e) => setNewSuspectAlias(e.target.value)} 
+                    placeholder="e.g. Vicky / Raja"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500" 
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-slate-300 font-semibold block mb-1">Threat Level</label>
+                  <select 
+                    value={newSuspectThreat} 
+                    onChange={(e) => setNewSuspectThreat(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="CRITICAL">CRITICAL</option>
+                    <option value="HIGH">HIGH</option>
+                    <option value="MEDIUM">MEDIUM</option>
+                    <option value="LOW">LOW</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-slate-300 font-semibold block mb-1">Legal Status</label>
+                  <select 
+                    value={newSuspectStatus} 
+                    onChange={(e) => setNewSuspectStatus(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500"
+                  >
+                    <option value="ARRESTED">ARRESTED</option>
+                    <option value="IN_REMAND">IN REMAND</option>
+                    <option value="AT_LARGE">AT LARGE</option>
+                    <option value="BAILED">BAILED</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-slate-300 font-semibold block mb-1">Jurisdiction / City</label>
+                <input 
+                  type="text" 
+                  value={newSuspectCity} 
+                  onChange={(e) => setNewSuspectCity(e.target.value)} 
+                  placeholder="e.g. Nagpur / Mumbai"
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500" 
+                />
+              </div>
+
+              <div>
+                <label className="text-slate-300 font-semibold block mb-1">Physical Traits & Marks</label>
+                <textarea 
+                  rows={2} 
+                  value={newSuspectDesc} 
+                  onChange={(e) => setNewSuspectDesc(e.target.value)} 
+                  placeholder="e.g. Scar on left eyebrow, tattoo on forearm..."
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500" 
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-[hsl(217,33%,17%)]">
+              <button 
+                type="button" 
+                onClick={() => setShowRegisterModal(false)} 
+                className="px-4 py-2 rounded-lg text-slate-400 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-semibold flex items-center gap-1.5 shadow-lg shadow-blue-500/20"
+              >
+                <Check className="w-4 h-4" /> Save & Index Suspect
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
