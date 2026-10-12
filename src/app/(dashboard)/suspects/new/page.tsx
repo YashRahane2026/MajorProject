@@ -19,6 +19,7 @@ import {
   Activity
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { saveSuspect, SuspectRecord } from '@/lib/data/suspects-data';
 
 export default function NewSuspectPage() {
   const router = useRouter();
@@ -99,30 +100,30 @@ export default function NewSuspectPage() {
 
     setIsSubmitting(true);
 
-    const newSuspect = {
+    const birthYear = parseInt(dob.split('-')[0] || '1995', 10);
+    const calculatedAge = Math.max(18, new Date().getFullYear() - birthYear);
+
+    const newSuspect: SuspectRecord = {
       id: `custom_${Date.now()}`,
       name: `${firstName.trim()} ${lastName.trim()}`,
       alias: alias.trim() || '-',
-      threatLevel,
-      status,
+      threatLevel: (threatLevel as any) || 'HIGH',
+      status: (status as any) || 'ARRESTED',
       city: city.trim() || 'Nagpur',
+      policeStation: `${city.trim() || 'Sitabuldi'} PS, Nagpur`,
       cases: 1,
       lastUpdated: new Date().toISOString().split('T')[0],
-      photoUrl: previewUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-      idType,
-      idNumber: idNumber || '9876-5432-1098',
+      gender,
+      age: calculatedAge,
       height: `${height} cm`,
       weight: `${weight} kg`,
       physicalDesc,
       distinguishingMarks,
+      photoUrl: previewUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300',
     };
 
-    // Save to LocalStorage
-    if (typeof window !== 'undefined') {
-      const existingJson = localStorage.getItem('custom_suspects');
-      const existing = existingJson ? JSON.parse(existingJson) : [];
-      localStorage.setItem('custom_suspects', JSON.stringify([newSuspect, ...existing]));
-    }
+    // Save to unified storage
+    saveSuspect(newSuspect);
 
     setTimeout(() => {
       setIsSubmitting(false);

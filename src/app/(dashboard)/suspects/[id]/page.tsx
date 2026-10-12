@@ -29,21 +29,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-
-const DEFAULT_SUSPECT_MAP: Record<string, any> = {
-  '1': { name: 'Vikram Sharma', alias: 'Vicky', threatLevel: 'CRITICAL', status: 'AT_LARGE', city: 'Nagpur', physicalDesc: 'Tall build, wheatish complexion, scar on left cheek.', distinguishingMarks: 'Large tattoo of trident on right forearm.', photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300' },
-  '2': { name: 'Rahul Desai', alias: 'Raju', threatLevel: 'HIGH', status: 'ARRESTED', city: 'Pune', physicalDesc: 'Medium build, short dark hair, sharp jawline.', distinguishingMarks: 'Cut mark near right ear.', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300' },
-  '3': { name: 'Amit Patel', alias: 'Bhaiya', threatLevel: 'MEDIUM', status: 'IN_REMAND', city: 'Nagpur', physicalDesc: 'Stocky build, wears spectacles.', distinguishingMarks: 'Mole on right side of neck.', photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300' },
-  '4': { name: 'Sanjay Kumar', alias: '-', threatLevel: 'LOW', status: 'BAILED', city: 'Mumbai', physicalDesc: 'Lean build, dark complexion.', distinguishingMarks: 'Burn scar on left wrist.', photo: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300' },
-  '5': { name: 'Priya Sharma', alias: 'Lady Gang', threatLevel: 'MEDIUM', status: 'AT_LARGE', city: 'Hyderabad', physicalDesc: 'Slim build, long black hair.', distinguishingMarks: 'Star tattoo on left shoulder.', photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300' },
-  '6': { name: 'Ravi Verma', alias: 'Baba', threatLevel: 'CRITICAL', status: 'CONVICTED', city: 'Bangalore', physicalDesc: 'Muscular build, bearded, short hair.', distinguishingMarks: 'Eagle tattoo on chest.', photo: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300' },
-  '7': { name: 'Anil Kapoor', alias: 'AK', threatLevel: 'HIGH', status: 'AT_LARGE', city: 'Chennai', physicalDesc: 'Average height, curly dark hair.', distinguishingMarks: 'Surgical scar on right knee.', photo: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=300' },
-  '8': { name: 'Sneha Reddy', alias: '-', threatLevel: 'LOW', status: 'ARRESTED', city: 'Kolkata', physicalDesc: 'Petite build, brown eyes.', distinguishingMarks: 'Birthmark on left forearm.', photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300' },
-  '9': { name: 'Mohammed Ali', alias: 'Bhai', threatLevel: 'HIGH', status: 'IN_REMAND', city: 'Mumbai', physicalDesc: 'Tall, athletic build.', distinguishingMarks: 'Scar above left eyebrow.', photo: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=300' },
-  '10': { name: 'Deepak Joshi', alias: '-', threatLevel: 'MEDIUM', status: 'BAILED', city: 'Pune', physicalDesc: 'Medium height, wears thick glasses.', distinguishingMarks: 'Tattoo on right wrist.', photo: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=300' },
-  '11': { name: 'Neha Gupta', alias: '-', threatLevel: 'LOW', status: 'CONVICTED', city: 'Nagpur', physicalDesc: 'Fair complexion, medium height.', distinguishingMarks: 'Small scar on chin.', photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300' },
-  '12': { name: 'Surya Narayanan', alias: 'Suri', threatLevel: 'CRITICAL', status: 'AT_LARGE', city: 'Chennai', physicalDesc: 'Broad shoulders, shaved head.', distinguishingMarks: 'Dragon tattoo on arm.', photo: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300' },
-};
+import { getSuspectById, saveSuspect, removeSuspect, SuspectRecord } from '@/lib/data/suspects-data';
 
 export default function SuspectDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -53,13 +39,18 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
   const [showEditModal, setShowEditModal] = useState(false);
   const [showLinkCaseModal, setShowLinkCaseModal] = useState(false);
 
-  // Edit Suspect Profile Form State
+  // Profile Form State
   const [suspectName, setSuspectName] = useState('');
   const [suspectAlias, setSuspectAlias] = useState('');
-  const [threatLevel, setThreatLevel] = useState('HIGH');
+  const [threatLevel, setThreatLevel] = useState<'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('HIGH');
   const [physicalDesc, setPhysicalDesc] = useState('');
   const [distinguishingMarks, setDistinguishingMarks] = useState('');
   const [suspectCity, setSuspectCity] = useState('Nagpur');
+  const [policeStation, setPoliceStation] = useState('Sitabuldi PS, Nagpur');
+  const [gender, setGender] = useState('Male');
+  const [age, setAge] = useState(32);
+  const [height, setHeight] = useState('175 cm');
+  const [weight, setWeight] = useState('75 kg');
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
 
   // Link Case State
@@ -73,65 +64,43 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
   ]);
 
   // Timeline events state
-  const [newStatus, setNewStatus] = useState('REMAND');
+  const [newStatus, setNewStatus] = useState('IN_REMAND');
   const [courtName, setCourtName] = useState('District & Sessions Court, Nagpur');
   const [orderNo, setOrderNo] = useState('ORD-2026-9941');
 
   const [timelineEvents, setTimelineEvents] = useState([
     { status: 'Remand Extended (7 Days)', date: '2026-08-18', location: 'District Court, Nagpur', order: 'ORD-2026-9941', current: true },
     { status: 'Arrested at Railway Station', date: '2026-08-15', location: 'Sitabuldi PS, Nagpur', order: 'FIR-2026-104', current: false },
-    { status: 'ArcFace Alias Matched (98.2%)', date: '2026-08-10', location: 'Mumbai Cyber Cell Database', order: 'BIO-SCAN-09', current: false },
-    { status: 'Bail Revoked', date: '2025-11-12', location: 'Sessions Court, Pune', order: 'ORD-2025-4412', current: false },
+    { status: 'ArcFace Alias Matched (98.2%)', date: '2026-08-10', location: 'Nagpur Cyber Cell Database', order: 'BIO-SCAN-09', current: false },
+    { status: 'Bail Revoked', date: '2025-11-12', location: 'Sessions Court, Nagpur', order: 'ORD-2025-4412', current: false },
   ]);
 
   // DYNAMIC DATA LOADING BASED ON params.id
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const idStr = String(params.id).trim();
-
-      // 1. Check custom_suspects in localStorage
-      const customJson = localStorage.getItem('custom_suspects');
-      if (customJson) {
-        try {
-          const list = JSON.parse(customJson);
-          const matched = list.find((s: any) => String(s.id).trim().toLowerCase() === idStr.toLowerCase());
-          if (matched) {
-            setSuspectName(matched.name);
-            setSuspectAlias(matched.alias || '-');
-            setThreatLevel(matched.threatLevel || 'HIGH');
-            setSuspectStatus(matched.status || 'ARRESTED');
-            setSuspectCity(matched.city || 'Nagpur');
-            setPhysicalDesc(matched.physicalDesc || 'Registered criminal suspect profile.');
-            setDistinguishingMarks(matched.distinguishingMarks || 'Scar/tattoo mark registered in database.');
-            setPhotoUrl(matched.photoUrl || matched.photo || null);
-            return;
-          }
-        } catch {
-          // ignore
-        }
-      }
-
-      // 2. Check DEFAULT_SUSPECT_MAP
-      const defaultData = DEFAULT_SUSPECT_MAP[idStr];
-      if (defaultData) {
-        setSuspectName(defaultData.name);
-        setSuspectAlias(defaultData.alias);
-        setThreatLevel(defaultData.threatLevel);
-        setSuspectStatus(defaultData.status);
-        setSuspectCity(defaultData.city);
-        setPhysicalDesc(defaultData.physicalDesc);
-        setDistinguishingMarks(defaultData.distinguishingMarks);
-        setPhotoUrl(defaultData.photo);
-        return;
-      }
-
-      // 3. Fallback for any other custom or unmapped ID
-      setSuspectName(`Suspect Record #${idStr}`);
-      setSuspectAlias('Unassigned Alias');
+    const record = getSuspectById(params.id);
+    if (record) {
+      setSuspectName(record.name);
+      setSuspectAlias(record.alias || '-');
+      setThreatLevel(record.threatLevel || 'HIGH');
+      setSuspectStatus(record.status || 'ARRESTED');
+      setSuspectCity(record.city || 'Nagpur');
+      setPoliceStation(record.policeStation || 'Sitabuldi PS, Nagpur');
+      setPhysicalDesc(record.physicalDesc || 'Registered criminal suspect profile.');
+      setDistinguishingMarks(record.distinguishingMarks || 'Scar/tattoo mark registered in database.');
+      setPhotoUrl(record.photoUrl || null);
+      setGender(record.gender || 'Male');
+      setAge(record.age || 32);
+      setHeight(record.height || '175 cm');
+      setWeight(record.weight || '75 kg');
+    } else {
+      // Fallback for custom or direct route IDs
+      setSuspectName(`Suspect #${params.id}`);
+      setSuspectAlias('Registered Alias');
       setThreatLevel('HIGH');
       setSuspectStatus('ARRESTED');
       setSuspectCity('Nagpur');
-      setPhysicalDesc('Active suspect under police investigation.');
+      setPoliceStation('Sitabuldi PS, Nagpur');
+      setPhysicalDesc('Active suspect record in Nagpur police database.');
       setDistinguishingMarks('Physical traits registered in CCTNS.');
       setPhotoUrl(null);
     }
@@ -139,24 +108,22 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
 
   const handleDeleteRecord = () => {
     if (confirm(`Are you sure you want to permanently delete suspect record: "${suspectName}"?`)) {
-      if (typeof window !== 'undefined') {
-        const customJson = localStorage.getItem('custom_suspects');
-        if (customJson) {
-          try {
-            const list = JSON.parse(customJson);
-            const updated = list.filter((s: any) => String(s.id) !== String(params.id));
-            localStorage.setItem('custom_suspects', JSON.stringify(updated));
-          } catch {
-            // ignore
-          }
-        }
-      }
+      removeSuspect(params.id);
       router.push('/suspects');
     }
   };
 
   const handleUpdateStatus = () => {
     setSuspectStatus(newStatus);
+    const existing = getSuspectById(params.id);
+    if (existing) {
+      saveSuspect({
+        ...existing,
+        status: newStatus as any,
+        lastUpdated: new Date().toISOString().split('T')[0]
+      });
+    }
+
     setTimelineEvents([
       { 
         status: `Transferred to ${newStatus.replace('_', ' ')}`, 
@@ -172,6 +139,27 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
+    const existing = getSuspectById(params.id);
+    const updatedRecord: SuspectRecord = {
+      id: params.id,
+      name: suspectName,
+      alias: suspectAlias,
+      threatLevel,
+      status: suspectStatus as any,
+      city: suspectCity,
+      policeStation: policeStation || `${suspectCity} PS, Nagpur`,
+      cases: existing ? existing.cases : 1,
+      lastUpdated: new Date().toISOString().split('T')[0],
+      gender,
+      age,
+      height,
+      weight,
+      physicalDesc,
+      distinguishingMarks,
+      photoUrl: photoUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300'
+    };
+
+    saveSuspect(updatedRecord);
     setShowEditModal(false);
   };
 
@@ -204,14 +192,18 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
   const StatusBadge = ({ status }: { status: string }) => {
     const colors: Record<string, string> = {
       'ARRESTED': 'bg-red-500/15 text-red-400 border-red-500/30',
+      'IN_REMAND': 'bg-purple-500/15 text-purple-400 border-purple-500/30',
       'REMAND': 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+      'BAILED': 'bg-amber-500/15 text-amber-400 border-amber-500/30',
       'BAIL': 'bg-amber-500/15 text-amber-400 border-amber-500/30',
       'TRIAL': 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30',
       'CONVICTED': 'bg-rose-600/15 text-rose-400 border-rose-500/30',
-      'CUSTODY': 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+      'CUSTODY': 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
       'RELEASED': 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+      'AT_LARGE': 'bg-red-500/15 text-red-400 border-red-500/30',
     };
-    return <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${colors[status] || colors.ARRESTED}`}>{status}</span>;
+    const label = (status || 'ARRESTED').replace('_', ' ');
+    return <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${colors[status] || colors.ARRESTED}`}>{label}</span>;
   };
 
   return (
@@ -232,6 +224,8 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
               <span>System ID: SUS-{params.id}</span>
               <span>•</span>
               <span className="text-blue-400 font-medium">Aliases: {suspectAlias}</span>
+              <span>•</span>
+              <span className="text-slate-400">{policeStation}</span>
             </p>
           </div>
         </div>
@@ -269,8 +263,8 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
             <Layers className="w-5 h-5 text-purple-400" />
           </div>
           <div>
-            <p className="font-semibold text-white text-sm">Unified Biometric Cluster Detected (3 Jurisdictions)</p>
-            <p className="text-xs text-purple-300/80">Identical ArcFace 512-dim facial vector matches cases across {suspectCity}, Mumbai Cyber Cell, and Pune Rural.</p>
+            <p className="font-semibold text-white text-sm">Unified Biometric Cluster Detected (Nagpur City & Rural PS)</p>
+            <p className="text-xs text-purple-300/80">Identical ArcFace 512-dim facial vector matches cases across {policeStation}, Sitabuldi PS, and Crime Branch Nagpur.</p>
           </div>
         </div>
         <Link href="/analytics" className="text-xs bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-purple-200 px-3 py-1.5 rounded-lg font-medium whitespace-nowrap self-start md:self-auto transition-colors flex items-center gap-1">
@@ -291,21 +285,21 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
             </div>
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
               <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Date of Birth</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Age / Gender</p>
                 <p className="text-sm text-slate-200 font-medium flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-slate-400" />
-                  April 12, 1988 (Age: 38)
+                  {age} Years • {gender} • Indian
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Gender / Nationality</p>
-                <p className="text-sm text-slate-200 font-medium">Male • Indian</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Height & Weight</p>
+                <p className="text-sm text-slate-200 font-medium">{height} • {weight}</p>
               </div>
               <div className="md:col-span-2">
-                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Last Known Address</p>
+                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Jurisdiction / Police Station</p>
                 <p className="text-sm text-slate-200 font-medium flex items-start gap-2">
                   <MapPin className="w-4 h-4 text-slate-400 mt-0.5" />
-                  Sitabuldi Road, {suspectCity}, Maharashtra
+                  {policeStation}, {suspectCity}, Maharashtra
                 </p>
               </div>
               <div className="md:col-span-2 border-t border-[hsl(217,33%,17%)] pt-6">
@@ -359,7 +353,7 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
         <div className="lg:col-span-4 space-y-6">
           {/* Mugshot Card */}
           <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-6 flex flex-col items-center text-center shadow-sm">
-            <div className="w-36 h-36 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 border-4 border-[hsl(222,47%,8%)] shadow-2xl ring-2 ring-blue-500/30 flex items-center justify-center mb-4 relative overflow-hidden">
+            <div className="w-40 h-40 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 border-4 border-[hsl(222,47%,8%)] shadow-2xl ring-2 ring-blue-500/30 flex items-center justify-center mb-4 relative overflow-hidden">
               {photoUrl ? (
                 <img src={photoUrl} alt={suspectName} className="w-full h-full object-cover" />
               ) : (
@@ -367,10 +361,10 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
               )}
             </div>
             <h3 className="font-bold text-white text-lg">{suspectName}</h3>
-            <p className="text-xs text-slate-400 mb-4">ArcFace 512-dim Vector: Indexed</p>
+            <p className="text-xs text-slate-400 mb-4 font-mono">ArcFace 512-dim Vector: Indexed</p>
             <div className="w-full p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs font-medium flex items-center justify-center gap-2">
               <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-              Active Arrest Record
+              Active Criminal Dossier
             </div>
           </div>
 
@@ -430,8 +424,12 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
                 <input type="text" value={suspectAlias} onChange={(e) => setSuspectAlias(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
               </div>
               <div>
+                <label className="text-slate-300 font-semibold block mb-1">Police Station Jurisdiction</label>
+                <input type="text" value={policeStation} onChange={(e) => setPoliceStation(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
+              </div>
+              <div>
                 <label className="text-slate-300 font-semibold block mb-1">Threat Level</label>
-                <select value={threatLevel} onChange={(e) => setThreatLevel(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+                <select value={threatLevel} onChange={(e) => setThreatLevel(e.target.value as any)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
                   <option value="CRITICAL">CRITICAL</option>
                   <option value="HIGH">HIGH</option>
                   <option value="MEDIUM">MEDIUM</option>
@@ -441,6 +439,10 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
               <div>
                 <label className="text-slate-300 font-semibold block mb-1">Physical Description</label>
                 <textarea rows={2} value={physicalDesc} onChange={(e) => setPhysicalDesc(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
+              </div>
+              <div>
+                <label className="text-slate-300 font-semibold block mb-1">Distinguishing Marks</label>
+                <input type="text" value={distinguishingMarks} onChange={(e) => setDistinguishingMarks(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
               </div>
             </div>
 
@@ -507,8 +509,8 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
                   className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
                 >
                   <option value="ARRESTED">ARRESTED (Initial Detention)</option>
-                  <option value="REMAND">REMAND (Judicial / Police Remand)</option>
-                  <option value="BAIL">BAIL (Granted Court Bail)</option>
+                  <option value="IN_REMAND">IN_REMAND (Judicial / Police Remand)</option>
+                  <option value="BAILED">BAILED (Granted Court Bail)</option>
                   <option value="TRIAL">TRIAL (Under Active Court Trial)</option>
                   <option value="CONVICTED">CONVICTED (Sentenced by Court)</option>
                   <option value="CUSTODY">CUSTODY (State Correctional Custody)</option>

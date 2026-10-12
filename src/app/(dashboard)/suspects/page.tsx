@@ -2,25 +2,25 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { Search, Filter, Plus, ChevronLeft, ChevronRight, Eye, ShieldAlert, UserCheck, X, Trash2 } from 'lucide-react';
+import { 
+  Search, 
+  Filter, 
+  Plus, 
+  ChevronLeft, 
+  ChevronRight, 
+  Eye, 
+  ShieldAlert, 
+  UserCheck, 
+  X, 
+  Trash2,
+  FolderOpen,
+  MapPin,
+  Building
+} from 'lucide-react';
+import { getAllSuspects, removeSuspect, SuspectRecord } from '@/lib/data/suspects-data';
+import DatasetInspectorModal from '@/components/modals/dataset-inspector-modal';
 
-const INITIAL_SUSPECTS = [
-  { id: '1', name: 'Vikram Sharma', alias: 'Vicky', threatLevel: 'CRITICAL', status: 'AT_LARGE', city: 'Nagpur', cases: 3, lastUpdated: '2026-08-18' },
-  { id: '2', name: 'Rahul Desai', alias: 'Raju', threatLevel: 'HIGH', status: 'ARRESTED', city: 'Pune', cases: 1, lastUpdated: '2026-08-17' },
-  { id: '3', name: 'Amit Patel', alias: 'Bhaiya', threatLevel: 'MEDIUM', status: 'IN_REMAND', city: 'Nagpur', cases: 2, lastUpdated: '2026-08-15' },
-  { id: '4', name: 'Sanjay Kumar', alias: '-', threatLevel: 'LOW', status: 'BAILED', city: 'Mumbai', cases: 1, lastUpdated: '2026-08-14' },
-  { id: '5', name: 'Priya Sharma', alias: 'Lady Gang', threatLevel: 'MEDIUM', status: 'AT_LARGE', city: 'Hyderabad', cases: 4, lastUpdated: '2026-08-10' },
-  { id: '6', name: 'Ravi Verma', alias: 'Baba', threatLevel: 'CRITICAL', status: 'CONVICTED', city: 'Bangalore', cases: 5, lastUpdated: '2026-08-01' },
-  { id: '7', name: 'Anil Kapoor', alias: 'AK', threatLevel: 'HIGH', status: 'AT_LARGE', city: 'Chennai', cases: 2, lastUpdated: '2026-07-28' },
-  { id: '8', name: 'Sneha Reddy', alias: '-', threatLevel: 'LOW', status: 'ARRESTED', city: 'Kolkata', cases: 1, lastUpdated: '2026-07-25' },
-  { id: '9', name: 'Mohammed Ali', alias: 'Bhai', threatLevel: 'HIGH', status: 'IN_REMAND', city: 'Mumbai', cases: 3, lastUpdated: '2026-07-20' },
-  { id: '10', name: 'Deepak Joshi', alias: '-', threatLevel: 'MEDIUM', status: 'BAILED', city: 'Pune', cases: 1, lastUpdated: '2026-07-15' },
-  { id: '11', name: 'Neha Gupta', alias: '-', threatLevel: 'LOW', status: 'CONVICTED', city: 'Nagpur', cases: 1, lastUpdated: '2026-07-10' },
-  { id: '12', name: 'Surya Narayanan', alias: 'Suri', threatLevel: 'CRITICAL', status: 'AT_LARGE', city: 'Chennai', cases: 6, lastUpdated: '2026-07-05' },
-];
-
-const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').substring(0, 2);
+const getInitials = (name: string) => (name || 'Suspect').split(' ').map(n => n[0]).join('').substring(0, 2);
 
 const ThreatBadge = ({ level }: { level: string }) => {
   const colors: Record<string, string> = {
@@ -39,43 +39,31 @@ const StatusBadge = ({ status }: { status: string }) => {
     'IN_REMAND': 'bg-purple-500/15 text-purple-400 border-purple-500/30',
     'BAILED': 'bg-amber-500/15 text-amber-400 border-amber-500/30',
     'CONVICTED': 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+    'TRIAL': 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30',
+    'CUSTODY': 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
   };
-  const label = status.replace('_', ' ');
+  const label = (status || 'AT_LARGE').replace('_', ' ');
   return <span className={`px-2 py-1 rounded-md text-[10px] font-semibold border ${colors[status] || colors.AT_LARGE}`}>{label}</span>;
 };
 
 export default function SuspectsPage() {
-  const [suspects, setSuspects] = useState(INITIAL_SUSPECTS);
+  const [suspects, setSuspects] = useState<SuspectRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [threatFilter, setThreatFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5;
+  const [showDatasetModal, setShowDatasetModal] = useState(false);
+  const pageSize = 8;
 
-  // Merge custom_suspects from localStorage on load
+  // Load centralized Nagpur & Indian suspects on mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const customJson = localStorage.getItem('custom_suspects');
-      if (customJson) {
-        try {
-          const customList = JSON.parse(customJson);
-          setSuspects([...customList, ...INITIAL_SUSPECTS]);
-        } catch {
-          // ignore
-        }
-      }
-    }
+    setSuspects(getAllSuspects());
   }, []);
 
   const handleDeleteSuspect = (id: string, name: string) => {
     if (confirm(`Are you sure you want to delete suspect record: "${name}"?`)) {
-      const updated = suspects.filter(s => String(s.id) !== String(id));
+      const updated = removeSuspect(id);
       setSuspects(updated);
-
-      if (typeof window !== 'undefined') {
-        const customOnly = updated.filter(s => String(s.id).startsWith('custom_'));
-        localStorage.setItem('custom_suspects', JSON.stringify(customOnly));
-      }
     }
   };
 
@@ -87,6 +75,7 @@ export default function SuspectsPage() {
       s.name.toLowerCase().includes(q) ||
       (s.alias && s.alias.toLowerCase().includes(q)) ||
       s.city.toLowerCase().includes(q) ||
+      (s.policeStation && s.policeStation.toLowerCase().includes(q)) ||
       s.id.toLowerCase().includes(q);
 
     const matchesThreat = !threatFilter || s.threatLevel === threatFilter;
@@ -111,17 +100,37 @@ export default function SuspectsPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* Top Header Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[hsl(217,33%,17%)] pb-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Suspects Directory</h1>
-          <p className="text-sm text-slate-400 mt-1">Manage, search, track, and remove criminal records with ArcFace 512-dim vector indexing</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+            <span>Suspects Directory</span>
+            <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/30 px-2.5 py-0.5 rounded-full font-mono font-normal">
+              Nagpur Region & Cross-Zone
+            </span>
+          </h1>
+          <p className="text-sm text-slate-400 mt-1">
+            Centralized biometric criminal registry with 512-dim ArcFace embeddings and authentic Maharashtra police station records
+          </p>
         </div>
-        <Link href="/suspects/new">
-          <button className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl flex items-center text-sm font-semibold transition-all shadow-lg shadow-blue-500/20">
-            <Plus className="w-4 h-4 mr-2" />
-            Register New Suspect
+
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          {/* Dataset & Augmentation Inspector Trigger */}
+          <button
+            onClick={() => setShowDatasetModal(true)}
+            className="flex-1 sm:flex-none bg-slate-800/80 hover:bg-slate-700/80 text-cyan-300 border border-cyan-500/30 px-3.5 py-2.5 rounded-xl flex items-center justify-center text-sm font-semibold transition-all shadow-sm group"
+          >
+            <FolderOpen className="w-4 h-4 mr-2 text-cyan-400 group-hover:scale-110 transition-transform" />
+            Dataset & Augmentations
           </button>
-        </Link>
+
+          <Link href="/suspects/new">
+            <button className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl flex items-center text-sm font-semibold transition-all shadow-lg shadow-blue-500/20">
+              <Plus className="w-4 h-4 mr-2" />
+              Register New Suspect
+            </button>
+          </Link>
+        </div>
       </div>
 
       <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl overflow-hidden shadow-xl">
@@ -131,7 +140,7 @@ export default function SuspectsPage() {
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Search suspects by name, alias, city..." 
+              placeholder="Search by name, alias, Nagpur PS..." 
               className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg pl-9 pr-9 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500"
               value={searchTerm}
               onChange={(e) => {
@@ -171,6 +180,8 @@ export default function SuspectsPage() {
               <option value="IN_REMAND">In Remand</option>
               <option value="BAILED">Bailed</option>
               <option value="CONVICTED">Convicted</option>
+              <option value="TRIAL">Trial</option>
+              <option value="CUSTODY">Custody</option>
             </select>
           </div>
         </div>
@@ -180,11 +191,11 @@ export default function SuspectsPage() {
           <table className="w-full text-left border-collapse text-sm">
             <thead>
               <tr className="border-b border-[hsl(217,33%,17%)] text-xs text-slate-400 uppercase tracking-wider bg-slate-900/40">
-                <th className="p-4">Suspect</th>
-                <th className="p-4">Alias</th>
+                <th className="p-4">Suspect Profile</th>
+                <th className="p-4">Aliases</th>
                 <th className="p-4">Threat Level</th>
                 <th className="p-4">Status</th>
-                <th className="p-4">Jurisdiction</th>
+                <th className="p-4">Station / Jurisdiction</th>
                 <th className="p-4 text-center">Cases</th>
                 <th className="p-4 text-right">Actions</th>
               </tr>
@@ -195,8 +206,20 @@ export default function SuspectsPage() {
                   <tr key={suspect.id} className="hover:bg-white/5 transition-colors group">
                     <td className="p-4">
                       <Link href={`/suspects/${suspect.id}`} className="flex items-center gap-3 group/item">
-                        <div className="w-9 h-9 rounded-full bg-[hsl(217,33%,17%)] flex items-center justify-center text-xs font-bold text-slate-300 border border-slate-700">
-                          {getInitials(suspect.name)}
+                        <div className="relative w-11 h-11 rounded-full overflow-hidden bg-[hsl(217,33%,17%)] flex items-center justify-center text-xs font-bold text-slate-300 border border-slate-700 flex-shrink-0 shadow-sm ring-1 ring-white/10 group-hover/item:ring-blue-500 transition-all">
+                          {suspect.photoUrl ? (
+                            <img 
+                              src={suspect.photoUrl} 
+                              alt={suspect.name} 
+                              className="w-full h-full object-cover" 
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
+                              }}
+                            />
+                          ) : null}
+                          <span className="absolute inset-0 flex items-center justify-center -z-10 bg-slate-800 text-slate-300">
+                            {getInitials(suspect.name)}
+                          </span>
                         </div>
                         <div>
                           <div className="font-semibold text-slate-200 group-hover/item:text-blue-400 transition-colors">
@@ -210,7 +233,7 @@ export default function SuspectsPage() {
                     </td>
                     <td className="p-4 text-slate-400 text-xs">
                       {suspect.alias && suspect.alias !== '-' ? (
-                        <span className="bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700 font-mono">
+                        <span className="bg-slate-800 text-slate-300 px-2 py-0.5 rounded border border-slate-700 font-mono text-[11px]">
                           aka {suspect.alias}
                         </span>
                       ) : (
@@ -224,7 +247,10 @@ export default function SuspectsPage() {
                       <StatusBadge status={suspect.status} />
                     </td>
                     <td className="p-4 text-slate-300 text-xs font-medium">
-                      {suspect.city}
+                      <div className="flex items-center gap-1.5 text-slate-300">
+                        <Building className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" />
+                        <span className="truncate max-w-[190px]">{suspect.policeStation || `${suspect.city} PS`}</span>
+                      </div>
                     </td>
                     <td className="p-4 text-center font-mono text-xs text-slate-300 font-bold">
                       {suspect.cases}
@@ -284,6 +310,12 @@ export default function SuspectsPage() {
           </div>
         </div>
       </div>
+
+      {/* Dataset & Augmentation Inspector Modal */}
+      <DatasetInspectorModal
+        isOpen={showDatasetModal}
+        onClose={() => setShowDatasetModal(false)}
+      />
     </div>
   );
 }
