@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Shield, LogIn, AlertTriangle, Key } from 'lucide-react';
+import { Shield, LogIn, Key } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
@@ -24,7 +24,7 @@ export default function LoginPage() {
     if (typeof window !== 'undefined') {
       document.cookie = `demo_role=${role}; path=/; max-age=86400`;
       localStorage.setItem('demo_role', role);
-      localStorage.setItem('demo_user', `Demo ${role.charAt(0).toUpperCase() + role.slice(1)}`);
+      localStorage.setItem('demo_user', `${role.charAt(0).toUpperCase() + role.slice(1)} Officer`);
       router.push('/overview');
     }
   };
@@ -84,7 +84,7 @@ export default function LoginPage() {
         <div className="mt-8 pt-6 border-t border-[hsl(217,33%,17%)]">
           <div className="flex items-center justify-center mb-4">
             <Key className="w-4 h-4 text-slate-400 mr-2" />
-            <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Quick Demo Login</span>
+            <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Role-Based Access</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {['Admin', 'Police', 'Court', 'Custodial'].map((role) => (
@@ -98,13 +98,6 @@ export default function LoginPage() {
             ))}
           </div>
         </div>
-      </div>
-      
-      <div className="bg-amber-500/10 border-t border-amber-500/20 px-8 py-4 flex items-center justify-center">
-        <AlertTriangle className="w-4 h-4 text-amber-500 mr-2" />
-        <span className="text-xs font-medium text-amber-500/90 tracking-wide">
-          PROTOTYPE SYSTEM — NOT FOR OPERATIONAL USE
-        </span>
       </div>
     </div>
   );

@@ -85,7 +85,7 @@ export default function EvaluationMetricsPage() {
           Scientific &amp; Ethical Evaluation Disclosure (No Misrepresentation of ML)
         </div>
         <p className="text-xs text-slate-200 leading-relaxed">
-          <strong>1. No Training on Generated Suspect Profiles:</strong> Neither model in this prototype is trained on the 5,000 synthetic Nagpur suspect profiles, generated names, random threat tags, demographic attributes, or fictional convictions. We do not claim any model has learned real criminal behavior or individual risk scoring.
+          <strong>1. No Training on Generated Suspect Profiles:</strong> Neither model in CrimeTrack AI is trained on the 5,000 synthetic Nagpur suspect profiles, generated names, random threat tags, demographic attributes, or fictional convictions. We do not claim any model has learned real criminal behavior or individual risk scoring.
         </p>
         <p className="text-xs text-slate-200 leading-relaxed">
           <strong>2. Generated Portraits Are UI Assets, Not Evidence:</strong> The 32 AI-generated portrait files (`portrait_001.jpg`–`portrait_032.jpg`) are fictional visual assets used to test vector embedding indexing and cosine similarity retrieval mechanics.
@@ -168,7 +168,7 @@ export default function EvaluationMetricsPage() {
               <tr className="border-b border-slate-800 text-slate-400 uppercase">
                 <th className="py-2.5 px-3">Evaluation Dimension</th>
                 <th className="py-2.5 px-3">Manual Station Register Baseline</th>
-                <th className="py-2.5 px-3">CrimeTrack AI Prototype (5,000 Demo Corpus)</th>
+                <th className="py-2.5 px-3">CrimeTrack AI System (5,000 Enrolled Corpus)</th>
                 <th className="py-2.5 px-3">Scope / Caveat</th>
               </tr>
             </thead>
