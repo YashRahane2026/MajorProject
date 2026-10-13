@@ -1019,7 +1019,7 @@ export const SUSPECTS_DATA: SuspectRecord[] = BASE_INDIAN_SUSPECTS;
 const STORAGE_KEY = 'crimetrack_custom_suspects_v3_demo';
 
 export function ensureSyntheticCompliance(record: SuspectRecord): SuspectRecord {
-  const cleanId = String(record.id || '').startsWith('SYN-NGP-')
+  const cleanId = String(record.id || '').toUpperCase().startsWith('SYN-')
     ? String(record.id)
     : `SYN-NGP-${String(record.id || '9999').padStart(5, '0')}`;
   const cleanName = record.name.replace(/\s*\[SYNTHETIC DEMO.*?\]/gi, '').trim();

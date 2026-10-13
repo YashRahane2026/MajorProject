@@ -3,6 +3,8 @@ import {
   loadAll5000SyntheticProfiles,
   getSyntheticFilterMetadata,
   SYNTHETIC_DATASET_SUMMARY,
+  addCustomServerSuspect,
+  removeCustomServerSuspect,
 } from '@/lib/data/server-synthetic-loader';
 import { ensureSyntheticCompliance, SuspectRecord } from '@/lib/data/suspects-data';
 
@@ -90,39 +92,73 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as Partial<SuspectRecord>;
-  const newId = body.id || `SYN-NGP-${Date.now().toString().slice(-5)}`;
+  try {
+    const body = await request.json();
 
-  const record: SuspectRecord = ensureSyntheticCompliance({
-    id: newId,
-    name: body.name || `Suspect Profile`,
-    alias: body.alias || 'None',
-    threatLevel: body.threatLevel || 'MEDIUM',
-    status: body.status || 'UNDER_INVESTIGATION',
-    city: body.city || 'Nagpur',
-    district: 'Nagpur',
-    stateOrUT: 'Maharashtra',
-    region: 'Nagpur Metropolitan Region',
-    locality: body.locality || 'Sitabuldi',
-    policeStation:
-      body.policeStation ||
-      `Nagpur Police — ${body.locality || 'Sitabuldi'} Station`,
-    cases: typeof body.cases === 'number' ? body.cases : 1,
-    lastUpdated: new Date().toISOString().split('T')[0],
-    gender: body.gender || 'Male',
-    age: typeof body.age === 'number' ? body.age : 30,
-    height: body.height || '170 cm',
-    weight: body.weight || '70 kg',
-    physicalDesc:
-      body.physicalDesc ||
-      'Standard identification physical profile.',
-    distinguishingMarks:
-      body.distinguishingMarks || 'None recorded',
-    photoUrl: body.photoUrl || '/images/portrait_001.jpg',
-    crimeCategory:
-      body.crimeCategory || 'Other Cognizable Offence',
-    caseReferenceDemo: body.caseReferenceDemo || `NGP-2026-${newId}`,
-  });
+    // Support array sync
+    if (Array.isArray(body)) {
+      const added = body.map((item) => addCustomServerSuspect(ensureSyntheticCompliance(item)));
+      return NextResponse.json({ success: true, count: added.length, data: added }, { status: 201 });
+    }
 
-  return NextResponse.json({ data: record }, { status: 201 });
+    if (body.sync && Array.isArray(body.sync)) {
+      const added = body.sync.map((item: SuspectRecord) => addCustomServerSuspect(ensureSyntheticCompliance(item)));
+      return NextResponse.json({ success: true, count: added.length, data: added }, { status: 201 });
+    }
+
+    const newId = body.id || `SYN-NGP-${Date.now().toString().slice(-5)}`;
+
+    const record: SuspectRecord = ensureSyntheticCompliance({
+      id: newId,
+      name: body.name || `Suspect Profile`,
+      alias: body.alias || 'None',
+      threatLevel: body.threatLevel || 'MEDIUM',
+      status: body.status || 'UNDER_INVESTIGATION',
+      city: body.city || 'Nagpur',
+      district: 'Nagpur',
+      stateOrUT: 'Maharashtra',
+      region: 'Nagpur Metropolitan Region',
+      locality: body.locality || 'Sitabuldi',
+      policeStation:
+        body.policeStation ||
+        `Nagpur Police — ${body.locality || 'Sitabuldi'} Station`,
+      cases: typeof body.cases === 'number' ? body.cases : 1,
+      lastUpdated: new Date().toISOString().split('T')[0],
+      gender: body.gender || 'Male',
+      age: typeof body.age === 'number' ? body.age : 30,
+      height: body.height || '170 cm',
+      weight: body.weight || '70 kg',
+      physicalDesc:
+        body.physicalDesc ||
+        'Standard identification physical profile.',
+      distinguishingMarks:
+        body.distinguishingMarks || 'None recorded',
+      photoUrl: body.photoUrl || '/images/portrait_001.jpg',
+      crimeCategory:
+        body.crimeCategory || 'Other Cognizable Offence',
+      caseReferenceDemo: body.caseReferenceDemo || `NGP-2026-${newId}`,
+    });
+
+    const saved = addCustomServerSuspect(record);
+    return NextResponse.json({ success: true, data: saved }, { status: 201 });
+  } catch (err) {
+    console.error('Error in POST /api/suspects:', err);
+    return NextResponse.json({ error: 'Failed to register suspect record' }, { status: 400 });
+  }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id') || searchParams.get('deleteId');
+    if (!id) {
+      return NextResponse.json({ error: 'Missing suspect ID' }, { status: 400 });
+    }
+    const removed = removeCustomServerSuspect(id);
+    return NextResponse.json({ success: true, removed, id });
+  } catch (err) {
+    console.error('Error in DELETE /api/suspects:', err);
+    return NextResponse.json({ error: 'Failed to delete suspect' }, { status: 500 });
+  }
+}
+

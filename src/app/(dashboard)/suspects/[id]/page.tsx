@@ -174,6 +174,11 @@ export default function SuspectDetailPage() {
     };
     saveSuspect(updated);
     setRecord(updated);
+    fetch('/api/suspects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updated),
+    }).catch(() => {});
   };
 
   const handleUpdateStatus = (e: React.FormEvent) => {
@@ -203,7 +208,9 @@ export default function SuspectDetailPage() {
 
   const handleDeleteRecord = () => {
     if (confirm(`Remove profile "${suspectName}"?`)) {
-      removeSuspect(record?.id || rawId);
+      const targetId = record?.id || rawId;
+      removeSuspect(targetId);
+      fetch(`/api/suspects?deleteId=${encodeURIComponent(targetId)}`, { method: 'DELETE' }).catch(() => {});
       router.push('/suspects');
     }
   };

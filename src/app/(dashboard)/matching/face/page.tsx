@@ -295,6 +295,15 @@ export default function FaceMatchingPage() {
     const updated = saveSuspect(newSuspect);
     setAllSuspects(updated);
 
+    // Asynchronously synchronize with server dataset
+    try {
+      fetch('/api/suspects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSuspect),
+      }).catch((e) => console.warn('Server sync warning:', e));
+    } catch {}
+
     setShowRegisterModal(false);
     setRegistrationSuccessBanner(`✅ Suspect Profile "${newSuspect.name}" registered successfully into database (ID: ${newId})!`);
 

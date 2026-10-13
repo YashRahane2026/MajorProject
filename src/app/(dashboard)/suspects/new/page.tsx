@@ -89,7 +89,7 @@ export default function NewSuspectPage() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firstName.trim() || !lastName.trim()) {
       alert('Please enter First Name and Last Name.');
@@ -128,13 +128,21 @@ export default function NewSuspectPage() {
 
     saveSuspect(newSuspect);
 
+    try {
+      await fetch('/api/suspects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newSuspect),
+      });
+    } catch (err) {
+      console.warn('Server registration sync warning:', err);
+    }
+
+    setIsSubmitting(false);
+    setShowSuccess(true);
     setTimeout(() => {
-      setIsSubmitting(false);
-      setShowSuccess(true);
-      setTimeout(() => {
-        router.push('/suspects');
-      }, 1000);
-    }, 600);
+      router.push('/suspects');
+    }, 1000);
   };
 
   return (

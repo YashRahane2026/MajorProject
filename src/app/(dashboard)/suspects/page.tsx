@@ -136,16 +136,39 @@ export default function SuspectsPage() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
 
-      // Merge any custom records on page 1
+      // Filter local custom records with identical criteria
       const customLocal = getCustomDemoSuspects();
+      const qLower = debouncedSearch.toLowerCase().trim();
+
+      const matchingCustom = customLocal.filter((s) => {
+        if (threatFilter && s.threatLevel !== threatFilter) return false;
+        if (statusFilter && s.status !== statusFilter) return false;
+        if (categoryFilter && s.crimeCategory !== categoryFilter) return false;
+        if (localityFilter && s.locality !== localityFilter) return false;
+        if (qLower) {
+          const hay = [s.id, s.name, s.alias, s.locality, s.policeStation, s.crimeCategory]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+          if (!hay.includes(qLower)) return false;
+        }
+        return true;
+      });
+
       let rows: SuspectRecord[] = json.data || [];
-      if (currentPage === 1 && customLocal.length > 0 && !debouncedSearch) {
-        rows = [...customLocal, ...rows];
+
+      // Deduplicate rows against matchingCustom
+      const existingIds = new Set(rows.map((r) => String(r.id).toLowerCase()));
+      const unaddedCustom = matchingCustom.filter((c) => !existingIds.has(String(c.id).toLowerCase()));
+
+      if (unaddedCustom.length > 0) {
+        rows = [...unaddedCustom, ...rows];
       }
 
+      const totalCount = (json.total || 0) + unaddedCustom.length;
       setSuspects(rows);
-      setTotalRecords((json.total || 0) + customLocal.length);
-      setTotalPages(json.totalPages || 1);
+      setTotalRecords(totalCount);
+      setTotalPages(Math.max(1, Math.ceil(totalCount / pageSize)));
       setJumpPageInput(String(json.page || currentPage));
 
       if (json.filters) {
@@ -173,6 +196,18 @@ export default function SuspectsPage() {
   useEffect(() => {
     fetchProfiles();
   }, [fetchProfiles]);
+
+  // Synchronize any locally created suspect records with the server API on startup
+  useEffect(() => {
+    const custom = getCustomDemoSuspects();
+    if (custom.length > 0) {
+      fetch('/api/suspects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sync: custom }),
+      }).catch(() => {});
+    }
+  }, []);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {

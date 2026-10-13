@@ -14,22 +14,65 @@ let cachedFilterMeta: {
   localities: string[];
 } | null = null;
 
-export function loadAll5000SyntheticProfiles(): SuspectRecord[] {
-  if (cached5000) return cached5000;
+const serverCustomSuspects: SuspectRecord[] = [];
 
-  try {
-    const jsonPath = path.join(process.cwd(), 'data', 'demo', 'synthetic_nagpur_suspects_5000.json');
-    if (fs.existsSync(jsonPath)) {
-      const rawText = fs.readFileSync(jsonPath, 'utf-8');
-      const parsed = JSON.parse(rawText) as SuspectRecord[];
-      cached5000 = parsed.map(ensureSyntheticCompliance);
-      return cached5000;
+export function addCustomServerSuspect(suspect: SuspectRecord): SuspectRecord {
+  const compliant = ensureSyntheticCompliance(suspect);
+  const existingIdx = serverCustomSuspects.findIndex(
+    (s) => String(s.id).toLowerCase() === String(compliant.id).toLowerCase()
+  );
+  if (existingIdx >= 0) {
+    serverCustomSuspects[existingIdx] = compliant;
+  } else {
+    serverCustomSuspects.unshift(compliant);
+  }
+  // Invalidate cached filter metadata
+  cachedFilterMeta = null;
+  return compliant;
+}
+
+export function getCustomServerSuspects(): SuspectRecord[] {
+  return serverCustomSuspects;
+}
+
+export function removeCustomServerSuspect(id: string): boolean {
+  const idClean = String(id).trim().toLowerCase();
+  const idx = serverCustomSuspects.findIndex(
+    (s) => String(s.id).toLowerCase() === idClean
+  );
+  if (idx >= 0) {
+    serverCustomSuspects.splice(idx, 1);
+    cachedFilterMeta = null;
+    return true;
+  }
+  return false;
+}
+
+export function loadAll5000SyntheticProfiles(): SuspectRecord[] {
+  let base: SuspectRecord[] = [];
+  if (cached5000) {
+    base = cached5000;
+  } else {
+    try {
+      const jsonPath = path.join(process.cwd(), 'data', 'demo', 'synthetic_nagpur_suspects_5000.json');
+      if (fs.existsSync(jsonPath)) {
+        const rawText = fs.readFileSync(jsonPath, 'utf-8');
+        const parsed = JSON.parse(rawText) as SuspectRecord[];
+        cached5000 = parsed.map(ensureSyntheticCompliance);
+        base = cached5000;
+      } else {
+        base = BASE_INDIAN_SUSPECTS;
+      }
+    } catch (err) {
+      console.error('Failed to load synthetic_nagpur_suspects_5000.json:', err);
+      base = BASE_INDIAN_SUSPECTS;
     }
-  } catch (err) {
-    console.error('Failed to load synthetic_nagpur_suspects_5000.json:', err);
   }
 
-  return BASE_INDIAN_SUSPECTS;
+  if (serverCustomSuspects.length === 0) return base;
+
+  const customIds = new Set(serverCustomSuspects.map((s) => String(s.id).toLowerCase()));
+  return [...serverCustomSuspects, ...base.filter((b) => !customIds.has(String(b.id).toLowerCase()))];
 }
 
 export function getSyntheticFilterMetadata() {

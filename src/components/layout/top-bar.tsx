@@ -91,8 +91,11 @@ export default function TopBar({
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
       document.cookie = 'demo_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      document.cookie = 'crimetrack_user_email=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       localStorage.removeItem('demo_role');
       localStorage.removeItem('demo_user');
+      localStorage.removeItem('auth_email');
+      localStorage.removeItem('auth_user_details');
       router.push('/login');
     }
   };

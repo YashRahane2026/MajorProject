@@ -25,6 +25,16 @@ import {
   SYNTHETIC_DATASET_SUMMARY,
   ensureSyntheticCompliance,
 } from '../src/lib/data/suspects-data';
+import {
+  addCustomServerSuspect,
+  findSyntheticProfileById,
+  removeCustomServerSuspect,
+  loadAll5000SyntheticProfiles,
+} from '../src/lib/data/server-synthetic-loader';
+import {
+  authenticateOrRegisterUser,
+  formatNameFromEmail,
+} from '../src/lib/auth/auth-store';
 
 const ROOT = process.cwd();
 let passedTests = 0;
@@ -300,6 +310,78 @@ runTest('3.3 All 32 synthetic portraits and fallback SVG exist in public/images/
   }
   const fallbackPath = path.join(ROOT, 'public', 'images', 'portrait_fallback.svg');
   assert.ok(fs.existsSync(fallbackPath), 'Missing portrait_fallback.svg');
+});
+
+console.log(`\nSuite 4: Custom Suspect Server Operations & Smart Authentication`);
+
+runTest('4.1 addCustomServerSuspect, findSyntheticProfileById, and removeCustomServerSuspect work reliably', () => {
+  const customId = 'SYN-TEST-99999';
+  const custom = {
+    ...SUSPECTS_DATA[0],
+    id: customId,
+    name: 'Test Suspect Profile',
+    locality: 'Sitabuldi',
+  };
+
+  // Add custom suspect
+  addCustomServerSuspect(custom);
+  const found = findSyntheticProfileById(customId);
+  assert.ok(found, 'Added custom suspect should be retrievable by ID');
+  assert.strictEqual(found?.name, 'Test Suspect Profile');
+
+  // Verify it appears in loadAll5000SyntheticProfiles at the top
+  const all = loadAll5000SyntheticProfiles();
+  assert.strictEqual(all[0].id, customId);
+
+  // Remove custom suspect
+  const removed = removeCustomServerSuspect(customId);
+  assert.strictEqual(removed, true, 'Custom suspect should be removed');
+  const foundAfter = findSyntheticProfileById(customId);
+  assert.strictEqual(foundAfter, null, 'Removed suspect should not be found');
+});
+
+runTest('4.2 authenticateOrRegisterUser verifies existing accounts, detects wrong passwords, and auto-registers new users', () => {
+  // Test seeded account correct password
+  const adminRes = authenticateOrRegisterUser('admin@crimetrack.gov.in', 'admin');
+  assert.strictEqual(adminRes.success, true);
+  assert.strictEqual(adminRes.isNew, false);
+  assert.strictEqual(adminRes.user?.role, 'admin');
+
+  // Test seeded account with '123' suffix
+  const admin123Res = authenticateOrRegisterUser('admin@crimetrack.gov.in', 'admin123');
+  assert.strictEqual(admin123Res.success, true);
+  assert.strictEqual(admin123Res.isNew, false);
+
+  // Test seeded account with wrong password
+  const wrongRes = authenticateOrRegisterUser('admin@crimetrack.gov.in', 'incorrect_pass');
+  assert.strictEqual(wrongRes.success, false);
+  assert.ok(wrongRes.error?.includes('Incorrect password'));
+
+  // Test auto-registration for a brand new user
+  const newEmail = 'vedansh.gupta@gmail.com';
+  const newPass = 'securePass2026';
+  const newRes = authenticateOrRegisterUser(newEmail, newPass);
+  assert.strictEqual(newRes.success, true);
+  assert.strictEqual(newRes.isNew, true);
+  assert.strictEqual(newRes.user?.name, 'Vedansh Gupta');
+  assert.strictEqual(newRes.user?.role, 'admin');
+
+  // Subsequent login with correct password should succeed as registered user
+  const subRes = authenticateOrRegisterUser(newEmail, newPass);
+  assert.strictEqual(subRes.success, true);
+  assert.strictEqual(subRes.isNew, false);
+
+  // Subsequent login with wrong password should fail
+  const wrongSubRes = authenticateOrRegisterUser(newEmail, 'wrongPassword');
+  assert.strictEqual(wrongSubRes.success, false);
+  assert.ok(wrongSubRes.error?.includes('Incorrect password'));
+});
+
+runTest('4.3 formatNameFromEmail handles various email formats cleanly', () => {
+  assert.strictEqual(formatNameFromEmail('yash.rahane@gmail.com'), 'Yash Rahane');
+  assert.strictEqual(formatNameFromEmail('prince_maurya@police.gov.in'), 'Prince Maurya');
+  assert.strictEqual(formatNameFromEmail('shubham-singh@nagpur.gov.in'), 'Shubham Singh');
+  assert.strictEqual(formatNameFromEmail('officer@crimetrack.gov.in'), 'Officer');
 });
 
 console.log(`\n======================================================================`);
