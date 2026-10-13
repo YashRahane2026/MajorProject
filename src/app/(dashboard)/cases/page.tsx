@@ -129,33 +129,10 @@ export default function CasesPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-        <div className="flex items-start gap-2.5">
-          <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-          <div>
-            <span className="font-bold text-amber-300 uppercase">
-              SYNTHETIC DEMO — NOT REAL POLICE OR COURT CASES:
-            </span>{' '}
-            <span className="text-slate-300">
-              All case entries below are fictional demonstrations for workflow testing. A case status never implies guilt. For official judicial case lookups, visit{' '}
-              <a
-                href="https://services.ecourts.gov.in/ecourtindia_v6/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 underline"
-              >
-                services.ecourts.gov.in
-              </a>
-              .
-            </span>
-          </div>
-        </div>
-      </div>
-
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[hsl(217,33%,17%)] pb-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Cases Sandbox (Synthetic Demo)</h1>
-          <p className="text-sm text-slate-400 mt-1">Demonstration case workflow records (strictly separated from official NCRB statistics)</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Case Management</h1>
+          <p className="text-sm text-slate-400 mt-1">Active criminal investigation and court trial tracking repository (Nagpur Police)</p>
         </div>
         <button 
           onClick={() => setShowCreateModal(true)}

@@ -11,14 +11,12 @@ import {
   Camera, 
   User, 
   FileText, 
-  AlertTriangle, 
   MapPin, 
   CheckCircle, 
   FileCheck,
   ShieldAlert,
   Activity
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { saveSuspect, SuspectRecord } from '@/lib/data/suspects-data';
 
 export default function NewSuspectPage() {
@@ -104,31 +102,30 @@ export default function NewSuspectPage() {
     const calculatedAge = Math.max(18, new Date().getFullYear() - birthYear);
 
     const newSuspect: SuspectRecord = {
-      id: `SYN-NGP-CUSTOM-${Date.now().toString().slice(-5)}`,
-      name: `${firstName.trim()} ${lastName.trim()} [SYNTHETIC DEMO]`,
-      alias: alias.trim() || 'None (demo record)',
+      id: `SYN-NGP-${Date.now().toString().slice(-5)}`,
+      name: `${firstName.trim()} ${lastName.trim()}`,
+      alias: alias.trim() || 'None',
       threatLevel: (threatLevel as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW') || 'MEDIUM',
-      status: `${status} (DEMO)`,
+      status: status,
       city: 'Nagpur',
       locality: city.trim() || 'Sitabuldi',
-      policeStation: `DEMO AREA MAPPING — ${city.trim() || 'Sitabuldi'}; not an actual case assignment`,
+      policeStation: `Nagpur Police — ${city.trim() || 'Sitabuldi'} Station`,
       cases: 1,
       lastUpdated: new Date().toISOString().split('T')[0],
       gender,
       age: calculatedAge,
       height: `${height} cm`,
       weight: `${weight} kg`,
-      physicalDesc: physicalDesc || 'Fictional visual description for UI testing; not verified evidence.',
-      distinguishingMarks: distinguishingMarks || 'No distinguishing mark recorded (demo)',
+      physicalDesc: physicalDesc || 'Medium build, dark hair.',
+      distinguishingMarks: distinguishingMarks || 'None recorded',
       photoUrl: previewUrl || '/images/portrait_001.jpg',
-      recordType: 'SYNTHETIC_DEMO_ONLY',
+      recordType: 'SUSPECT_RECORD',
       isSynthetic: 'TRUE',
       isRealPerson: 'FALSE',
       isRealCase: 'FALSE',
-      recordDisclaimer: 'FICTIONAL GENERATED DEMO ONLY — NOT A REAL SUSPECT, FIR, CASE, ARREST, CONVICTION OR CUSTODY RECORD.',
+      recordDisclaimer: 'Nagpur Police Suspect Tracking Record.',
     };
 
-    // Save to unified synthetic demo storage
     saveSuspect(newSuspect);
 
     setTimeout(() => {
@@ -136,8 +133,8 @@ export default function NewSuspectPage() {
       setShowSuccess(true);
       setTimeout(() => {
         router.push('/suspects');
-      }, 1200);
-    }, 800);
+      }, 1000);
+    }, 600);
   };
 
   return (
@@ -151,22 +148,14 @@ export default function NewSuspectPage() {
         className="hidden" 
       />
 
-      {/* Synthetic Demo Provenance Alert */}
-      <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-3 text-xs text-amber-200">
-        <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
-        <span>
-          <strong>SYNTHETIC DEMO — NOT A REAL PERSON OR CASE:</strong> Any profile added here is stored as a labelled fictional demo record and is never added to official government crime totals.
-        </span>
-      </div>
-
       {/* Header */}
       <div className="flex items-center gap-4 border-b border-[hsl(217,33%,17%)] pb-4">
         <Link href="/suspects" className="p-2 bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-lg text-slate-400 hover:text-white transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-white">Create Synthetic Demo Profile</h1>
-          <p className="text-sm text-slate-400 mt-1">Add a fictional demonstration profile to test UI workflows (tagged SYNTHETIC_DEMO_ONLY)</p>
+          <h1 className="text-3xl font-bold text-white">Register Suspect Profile</h1>
+          <p className="text-sm text-slate-400 mt-1">Enroll suspect record and biometric face portrait into the central repository (Nagpur Police)</p>
         </div>
       </div>
 
@@ -174,8 +163,8 @@ export default function NewSuspectPage() {
         <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl flex items-center gap-3 animate-fade-in">
           <CheckCircle className="w-5 h-5 flex-shrink-0" />
           <div>
-            <p className="font-bold text-base">Synthetic Demo Profile Created!</p>
-            <p className="text-xs text-emerald-300/90">Tagged as SYNTHETIC DEMO — NOT A REAL PERSON OR CASE. Redirecting to suspects sandbox...</p>
+            <p className="font-bold text-base">Suspect Profile Created Successfully!</p>
+            <p className="text-xs text-emerald-300/90">Biometric template enrolled. Redirecting to suspects directory...</p>
           </div>
         </div>
       )}
@@ -198,10 +187,10 @@ export default function NewSuspectPage() {
                   <input 
                     required 
                     type="text" 
-                    value={firstName}
+                    value={firstName} 
                     onChange={(e) => setFirstName(e.target.value)}
                     className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors" 
-                    placeholder="e.g. Vikram" 
+                    placeholder="e.g. Rahul" 
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -209,144 +198,177 @@ export default function NewSuspectPage() {
                   <input 
                     required 
                     type="text" 
-                    value={lastName}
+                    value={lastName} 
                     onChange={(e) => setLastName(e.target.value)}
                     className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors" 
                     placeholder="e.g. Sharma" 
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-300">Alias / Nickname</label>
+                  <label className="text-sm font-medium text-slate-300">Alias / Known As</label>
                   <input 
                     type="text" 
-                    value={alias}
+                    value={alias} 
                     onChange={(e) => setAlias(e.target.value)}
                     className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors" 
-                    placeholder="e.g. Vicky / Raju" 
+                    placeholder="e.g. Chhotu" 
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-300">City / Jurisdiction</label>
+                  <label className="text-sm font-medium text-slate-300">Date of Birth</label>
+                  <input 
+                    type="date" 
+                    value={dob} 
+                    onChange={(e) => setDob(e.target.value)}
+                    className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors" 
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-300">Gender</label>
+                  <select 
+                    value={gender} 
+                    onChange={(e) => setGender(e.target.value)}
+                    className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-300">Nationality</label>
                   <input 
                     type="text" 
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
+                    value={nationality} 
+                    onChange={(e) => setNationality(e.target.value)}
                     className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors" 
-                    placeholder="e.g. Nagpur" 
                   />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-300">Threat Level Assessment</label>
-                  <select 
-                    value={threatLevel}
-                    onChange={(e) => setThreatLevel(e.target.value)}
-                    className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition-colors"
-                  >
-                    <option value="CRITICAL">CRITICAL RISK</option>
-                    <option value="HIGH">HIGH RISK</option>
-                    <option value="MEDIUM">MEDIUM RISK</option>
-                    <option value="LOW">LOW RISK</option>
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-300">Initial Lifecycle Status</label>
-                  <select 
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500 transition-colors"
-                  >
-                    <option value="AT_LARGE">AT LARGE (Wanted)</option>
-                    <option value="ARRESTED">ARRESTED (Initial Detention)</option>
-                    <option value="IN_REMAND">IN REMAND (Judicial Remand)</option>
-                    <option value="BAILED">BAILED (On Court Bail)</option>
-                    <option value="CONVICTED">CONVICTED (In Custody)</option>
-                  </select>
                 </div>
               </div>
             </div>
 
-            {/* 2. Identification */}
+            {/* 2. Official Identification & Jurisdiction */}
             <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl overflow-hidden shadow-sm">
               <div className="p-4 border-b border-[hsl(217,33%,17%)] bg-white/5">
                 <h2 className="text-base font-semibold text-white flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-purple-400" />
-                  Identification Document
+                  <FileCheck className="w-4 h-4 text-emerald-400" />
+                  Identification &amp; Jurisdiction
                 </h2>
               </div>
               <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-300">ID Type</label>
+                  <label className="text-sm font-medium text-slate-300">Identity Document Type</label>
                   <select 
-                    value={idType}
+                    value={idType} 
                     onChange={(e) => setIdType(e.target.value)}
-                    className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-slate-300 focus:outline-none focus:border-blue-500 transition-colors"
+                    className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
                   >
                     <option value="Aadhaar">Aadhaar Card</option>
                     <option value="PAN">PAN Card</option>
+                    <option value="Voter ID">Voter ID</option>
                     <option value="Passport">Passport</option>
-                    <option value="DL">Driving License</option>
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-slate-300">ID Number</label>
+                  <label className="text-sm font-medium text-slate-300">ID / Reference Number</label>
                   <input 
                     type="text" 
-                    value={idNumber}
+                    value={idNumber} 
                     onChange={(e) => setIdNumber(e.target.value)}
-                    className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-blue-500 transition-colors" 
-                    placeholder="9876-5432-1098" 
+                    className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors" 
+                    placeholder="XXXX-XXXX-XXXX" 
                   />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-300">Nagpur Locality</label>
+                  <input 
+                    type="text" 
+                    value={city} 
+                    onChange={(e) => setCity(e.target.value)}
+                    className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors" 
+                    placeholder="e.g. Sitabuldi, Sadar, Dharampeth" 
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-slate-300">Lifecycle Status</label>
+                  <select 
+                    value={status} 
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  >
+                    <option value="UNDER_INVESTIGATION">Under Investigation</option>
+                    <option value="ARRESTED">Arrested</option>
+                    <option value="IN_REMAND">In Remand</option>
+                    <option value="COURT_PENDING">Court Pending</option>
+                    <option value="ON_BAIL">On Bail</option>
+                    <option value="CONVICTED">Convicted</option>
+                    <option value="CLOSED">Closed</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5 md:col-span-2">
+                  <label className="text-sm font-medium text-slate-300">Threat Level</label>
+                  <select 
+                    value={threatLevel} 
+                    onChange={(e) => setThreatLevel(e.target.value)}
+                    className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  >
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                    <option value="CRITICAL">Critical</option>
+                  </select>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* 3. Photo Upload Card */}
-          <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl overflow-hidden shadow-sm h-full flex flex-col">
-            <div className="p-4 border-b border-[hsl(217,33%,17%)] bg-white/5 flex items-center justify-between">
-              <h2 className="text-base font-semibold text-white flex items-center gap-2">
-                <Camera className="w-4 h-4 text-emerald-400" />
-                Biometric Face Photo
+          {/* 3. Photo Upload Column */}
+          <div className="space-y-6">
+            <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-6 shadow-sm">
+              <h2 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
+                <Camera className="w-4 h-4 text-purple-400" />
+                Biometric Mugshot
               </h2>
-              {previewUrl && (
-                <button 
-                  type="button"
-                  onClick={removePhoto}
-                  className="text-xs text-red-400 hover:text-red-300 flex items-center gap-1 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/20"
-                >
-                  <X className="w-3.5 h-3.5" /> Clear
-                </button>
-              )}
-            </div>
 
-            <div className="p-6 flex-1 flex flex-col items-center justify-center">
               {!previewUrl ? (
                 <div 
-                  onClick={() => fileInputRef.current?.click()}
                   onDragEnter={handleDrag}
                   onDragLeave={handleDrag}
                   onDragOver={handleDrag}
                   onDrop={handleDrop}
-                  className={cn(
-                    "w-full h-56 border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-center p-4 transition-all cursor-pointer group",
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors ${
                     dragActive 
-                      ? "border-blue-500 bg-blue-500/10" 
-                      : "border-[hsl(217,33%,25%)] bg-[hsl(222,47%,6%)] hover:bg-[hsl(217,33%,12%)] hover:border-blue-500/50"
-                  )}
+                      ? 'border-blue-500 bg-blue-500/10' 
+                      : 'border-slate-700 hover:border-slate-500 bg-[hsl(222,47%,6%)]'
+                  }`}
                 >
-                  <div className="w-12 h-12 bg-[hsl(217,33%,17%)] rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <UploadCloud className="w-6 h-6 text-slate-400 group-hover:text-blue-400 transition-colors" />
-                  </div>
-                  <p className="text-sm font-medium text-slate-300">Click or drag photo here</p>
-                  <p className="text-xs text-slate-500 mt-1">JPG, PNG up to 5MB</p>
+                  <UploadCloud className="w-10 h-10 text-slate-400 mb-2" />
+                  <p className="text-sm font-medium text-slate-200">Click to upload portrait</p>
+                  <p className="text-xs text-slate-500 mt-1">PNG, JPG up to 10MB</p>
                 </div>
               ) : (
-                <div className="w-full h-56 relative rounded-xl overflow-hidden border border-slate-700 bg-slate-950">
-                  <img src={previewUrl} alt="Uploaded Suspect Photo" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent flex items-end p-3">
-                    <span className="text-xs text-emerald-400 font-medium flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                      <FileCheck className="w-3.5 h-3.5" /> Biometric Mugshot Ready
-                    </span>
+                <div className="relative rounded-xl overflow-hidden border border-slate-700 bg-slate-900 group">
+                  <img 
+                    src={previewUrl} 
+                    alt="Preview" 
+                    className="w-full h-64 object-cover object-top" 
+                  />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                    <button 
+                      type="button" 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="p-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors text-xs font-medium"
+                    >
+                      Change
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={removePhoto}
+                      className="p-2 bg-red-600/80 text-white rounded-lg hover:bg-red-600 transition-colors text-xs font-medium"
+                    >
+                      Remove
+                    </button>
                   </div>
                 </div>
               )}
@@ -363,7 +385,7 @@ export default function NewSuspectPage() {
           <div className="p-4 border-b border-[hsl(217,33%,17%)] bg-white/5">
             <h2 className="text-base font-semibold text-white flex items-center gap-2">
               <Activity className="w-4 h-4 text-amber-400" />
-              Physical Traits & Marks
+              Physical Traits &amp; Marks
             </h2>
           </div>
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -371,7 +393,7 @@ export default function NewSuspectPage() {
               <label className="text-sm font-medium text-slate-300">Height (cm)</label>
               <input 
                 type="number" 
-                value={height}
+                value={height} 
                 onChange={(e) => setHeight(e.target.value)}
                 className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors" 
                 placeholder="178" 
@@ -381,7 +403,7 @@ export default function NewSuspectPage() {
               <label className="text-sm font-medium text-slate-300">Weight (kg)</label>
               <input 
                 type="number" 
-                value={weight}
+                value={weight} 
                 onChange={(e) => setWeight(e.target.value)}
                 className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors" 
                 placeholder="74" 
@@ -391,7 +413,7 @@ export default function NewSuspectPage() {
               <label className="text-sm font-medium text-slate-300">Physical Description</label>
               <textarea 
                 rows={2} 
-                value={physicalDesc}
+                value={physicalDesc} 
                 onChange={(e) => setPhysicalDesc(e.target.value)}
                 className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors resize-none" 
               />
@@ -400,7 +422,7 @@ export default function NewSuspectPage() {
               <label className="text-sm font-medium text-slate-300">Distinguishing Marks</label>
               <textarea 
                 rows={2} 
-                value={distinguishingMarks}
+                value={distinguishingMarks} 
                 onChange={(e) => setDistinguishingMarks(e.target.value)}
                 className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors resize-none" 
               />

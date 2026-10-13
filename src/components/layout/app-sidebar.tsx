@@ -30,7 +30,7 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ 
   userRole = 'admin', 
-  userName = 'Demo Admin',
+  userName = 'Admin Officer',
   collapsed,
   setCollapsed
 }: AppSidebarProps) {
@@ -41,9 +41,9 @@ export default function AppSidebar({
       title: 'MAIN',
       items: [
         { label: 'Overview', href: '/overview', icon: LayoutDashboard },
-        { label: 'Suspects (Demo)', href: '/suspects', icon: Users },
-        { label: 'Cases (Demo)', href: '/cases', icon: Briefcase },
-        { label: 'FIRs (Demo)', href: '/firs', icon: FileText },
+        { label: 'Suspects Directory', href: '/suspects', icon: Users },
+        { label: 'Case Management', href: '/cases', icon: Briefcase },
+        { label: 'FIR Records', href: '/firs', icon: FileText },
       ]
     },
     {

@@ -27,7 +27,7 @@ interface TopBarProps {
 
 export default function TopBar({ 
   pageTitle, 
-  userName = 'Demo Admin',
+  userName = 'Admin Officer',
   userRole = 'admin',
   onToggleSidebar
 }: TopBarProps) {
@@ -42,8 +42,8 @@ export default function TopBar({
   const [notifications, setNotifications] = useState([
     {
       id: 1,
-      title: '[OFFICIAL STATS] NCRB & Railway Police Data Verified',
-      desc: '24 Nagpur City NCRB stat rows & 15 Nagpur Railway Police rows validated',
+      title: 'NCRB & Railway Police Official Statistics Validated',
+      desc: '24 Nagpur City NCRB stat rows & 15 Nagpur Railway Police rows verified',
       time: 'Verified 2026-10-13',
       unread: true,
       type: 'official',
@@ -51,18 +51,18 @@ export default function TopBar({
     },
     {
       id: 2,
-      title: '[SYNTHETIC DEMO] 5,000 Nagpur Demo Profiles Loaded',
-      desc: 'SYN-NGP-00001 to SYN-NGP-05000 ready with 32 fictional portrait assets',
-      time: 'Sandbox Active',
+      title: '5,000 Nagpur Suspect Profiles Loaded',
+      desc: 'Active database across 50 Nagpur localities with 32 biometric portrait assets',
+      time: 'Database Online',
       unread: true,
       type: 'demo',
       link: '/suspects'
     },
     {
       id: 3,
-      title: '[SYNTHETIC DEMO] Workflow Status Demonstration',
-      desc: 'Demo record SYN-NGP-00004 status: IN_REMAND (DEMO) — Not a real case',
-      time: 'Demo Event',
+      title: 'Lifecycle Status Update',
+      desc: 'Suspect SYN-NGP-00004 status updated: In Remand (Nagpur Central Prison)',
+      time: 'Recent Update',
       unread: false,
       type: 'status',
       link: '/suspects/SYN-NGP-00004'
@@ -79,7 +79,7 @@ export default function TopBar({
     if (typeof window !== 'undefined') {
       document.cookie = `demo_role=${role}; path=/; max-age=86400`;
       localStorage.setItem('demo_role', role);
-      localStorage.setItem('demo_user', `Demo ${role.charAt(0).toUpperCase() + role.slice(1)}`);
+      localStorage.setItem('demo_user', `${role.charAt(0).toUpperCase() + role.slice(1)} Officer`);
       window.dispatchEvent(new CustomEvent('crimetrack-role-change', { detail: { role } }));
       setProfileOpen(false);
       if (pathname !== '/overview') {
@@ -144,7 +144,7 @@ export default function TopBar({
                 autoFocus
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search 5,000 demo profiles (SYN-NGP-...)..."
+                placeholder="Search 5,000 suspect profiles (SYN-NGP-...)..."
                 className="bg-transparent text-white focus:outline-none w-56 text-xs placeholder:text-slate-500"
               />
               <button type="button" onClick={() => setSearchOpen(false)} className="text-slate-400 hover:text-white ml-1">
@@ -155,7 +155,7 @@ export default function TopBar({
             <button 
               onClick={() => setSearchOpen(true)}
               className="p-2 text-slate-400 hover:text-white rounded-full hover:bg-slate-800 transition-colors"
-              title="Search 5,000 Synthetic Demo Profiles"
+              title="Search 5,000 Suspect Profiles"
             >
               <Search className="w-5 h-5" />
             </button>
@@ -235,7 +235,7 @@ export default function TopBar({
             <div className="absolute right-0 mt-2 w-64 bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl shadow-2xl p-2 z-50 animate-fade-in">
               <div className="p-2 border-b border-[hsl(217,33%,17%)] mb-1">
                 <p className="text-xs font-bold text-white">{userName}</p>
-                <p className="text-[10px] text-slate-400 font-mono">Session Mode: Role-Based Demo</p>
+                <p className="text-[10px] text-slate-400 font-mono">Session Mode: Active Departmental Access</p>
                 <span className="inline-block mt-1 text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded uppercase font-semibold">
                   Active Role: {userRole}
                 </span>

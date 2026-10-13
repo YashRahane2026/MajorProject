@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     provenance: {
       layer: 'OFFICIAL_GOVERNMENT_STATISTICS',
       description:
-        'Verified aggregate government crime statistics from NCRB and Nagpur Railway Police. Strictly separated from individual synthetic demo profiles.',
+        'Verified aggregate government crime statistics from NCRB and Nagpur Railway Police. Strictly separated from individual suspect profiles.',
       synthetic_records_included: 0,
     },
     count: records.length,

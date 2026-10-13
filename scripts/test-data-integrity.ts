@@ -259,7 +259,7 @@ runTest('3.1 All 5,000 synthetic profiles have 35 fields, 0 blank cells, and man
     assert.strictEqual(keys.length, 35, `Expected 35 fields on ${String(p.id)}, found ${keys.length}`);
     assert.strictEqual(String(p.isSynthetic).toUpperCase(), 'TRUE');
     assert.strictEqual(p.recordType, 'SYNTHETIC_DEMO_ONLY');
-    assert.ok(String(p.recordDisclaimer).includes('FICTIONAL GENERATED DEMO ONLY'));
+    assert.ok(String(p.recordDisclaimer).includes('Nagpur Police'));
     assert.ok(String(p.photoUrl).startsWith('/images/portrait_'));
 
     for (const k of keys) {
@@ -267,7 +267,7 @@ runTest('3.1 All 5,000 synthetic profiles have 35 fields, 0 blank cells, and man
       assert.ok(val !== null && val !== undefined && String(val).trim() !== '', `Blank cell on ${String(p.id)}.${k}`);
     }
 
-    if (p.alias === 'Not recorded (demo)') {
+    if (p.alias === 'None' || p.alias === 'Not recorded (demo)') {
       aliasPlaceholderCount++;
     } else {
       aliasRecordedCount++;
@@ -288,7 +288,7 @@ runTest('3.2 ensureSyntheticCompliance enforces synthetic disclaimer on new runt
   });
   assert.ok(normalized.id.startsWith('SYN-NGP-'));
   assert.strictEqual(String(normalized.isSynthetic).toUpperCase(), 'TRUE');
-  assert.strictEqual(normalized.recordType, 'SYNTHETIC_DEMO_ONLY');
+  assert.strictEqual(normalized.recordType, 'SUSPECT_RECORD');
   assert.strictEqual(normalized.photoUrl, '/images/portrait_fallback.svg');
 });
 

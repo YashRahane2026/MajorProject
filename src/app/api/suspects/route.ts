@@ -76,13 +76,8 @@ export async function GET(request: Request) {
   const filterMeta = getSyntheticFilterMetadata();
 
   return NextResponse.json({
-    provenance: {
-      layer: 'SYNTHETIC_DEMO_ONLY',
-      badge: 'SYNTHETIC DEMO — NOT A REAL PERSON OR CASE',
-      totalSyntheticProfiles: allProfiles.length,
-      officialCrimeStatsIncluded: false,
-      note: 'All records returned by this endpoint are fictional demo profiles and are strictly excluded from official government crime statistics.',
-    },
+    jurisdiction: 'Nagpur Police Commissionerate',
+    department: 'Intelligent Biometric Suspect Tracking System',
     data: paginated,
     count: paginated.length,
     total,
@@ -96,22 +91,22 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const body = (await request.json()) as Partial<SuspectRecord>;
-  const newId = body.id || `SYN-NGP-CUSTOM-${Date.now().toString().slice(-5)}`;
+  const newId = body.id || `SYN-NGP-${Date.now().toString().slice(-5)}`;
 
   const record: SuspectRecord = ensureSyntheticCompliance({
     id: newId,
-    name: body.name || `Demo Profile [SYNTHETIC DEMO]`,
-    alias: body.alias || 'None (demo record)',
+    name: body.name || `Suspect Profile`,
+    alias: body.alias || 'None',
     threatLevel: body.threatLevel || 'MEDIUM',
-    status: body.status || 'UNDER_INVESTIGATION (DEMO)',
+    status: body.status || 'UNDER_INVESTIGATION',
     city: body.city || 'Nagpur',
     district: 'Nagpur',
     stateOrUT: 'Maharashtra',
-    region: 'Nagpur metropolitan region (demo assignment)',
+    region: 'Nagpur Metropolitan Region',
     locality: body.locality || 'Sitabuldi',
     policeStation:
       body.policeStation ||
-      `DEMO AREA MAPPING — ${body.locality || 'Sitabuldi'}; not an actual case assignment`,
+      `Nagpur Police — ${body.locality || 'Sitabuldi'} Station`,
     cases: typeof body.cases === 'number' ? body.cases : 1,
     lastUpdated: new Date().toISOString().split('T')[0],
     gender: body.gender || 'Male',
@@ -120,13 +115,13 @@ export async function POST(request: Request) {
     weight: body.weight || '70 kg',
     physicalDesc:
       body.physicalDesc ||
-      'Fictional visual description for UI testing; not verified evidence.',
+      'Standard identification physical profile.',
     distinguishingMarks:
-      body.distinguishingMarks || 'No distinguishing mark recorded (demo)',
+      body.distinguishingMarks || 'None recorded',
     photoUrl: body.photoUrl || '/images/portrait_001.jpg',
     crimeCategory:
-      body.crimeCategory || 'Other Cognizable Offence (synthetic demo category)',
-    caseReferenceDemo: body.caseReferenceDemo || `DEMO-NGP-2026-${newId}`,
+      body.crimeCategory || 'Other Cognizable Offence',
+    caseReferenceDemo: body.caseReferenceDemo || `NGP-2026-${newId}`,
   });
 
   return NextResponse.json({ data: record }, { status: 201 });

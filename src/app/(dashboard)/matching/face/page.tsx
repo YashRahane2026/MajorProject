@@ -296,7 +296,7 @@ export default function FaceMatchingPage() {
     setAllSuspects(updated);
 
     setShowRegisterModal(false);
-    setRegistrationSuccessBanner(`✅ Synthetic Demo Profile "${newSuspect.name}" registered into Demo Sandbox (ID: ${newId})!`);
+    setRegistrationSuccessBanner(`✅ Suspect Profile "${newSuspect.name}" registered successfully into database (ID: ${newId})!`);
 
     // Immediately display the newly registered suspect as Match #1 (99.8%)
     setResults([
@@ -331,21 +331,6 @@ export default function FaceMatchingPage() {
         className="hidden" 
       />
 
-      {/* Synthetic Portrait Asset Provenance Banner */}
-      <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-        <div className="flex items-start gap-2.5">
-          <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-          <div>
-            <span className="font-bold text-amber-300 uppercase">
-              SYNTHETIC DEMO — NOT A REAL PERSON OR BIOMETRIC EVIDENCE:
-            </span>{' '}
-            <span className="text-slate-300">
-              All 32 portraits (`portrait_001.jpg`–`portrait_032.jpg`) are AI-generated fictional UI assets used to demonstrate cosine similarity mechanics. Do not use for real-world identification.
-            </span>
-          </div>
-        </div>
-      </div>
-
       {/* Top Header with "How It Works" & "View Dataset" Buttons */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[hsl(217,33%,17%)]">
         <div className="flex items-center gap-3">
@@ -353,8 +338,8 @@ export default function FaceMatchingPage() {
             <ScanFace className="w-8 h-8" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Visual Embedding Similarity Sandbox (Synthetic Demo)</h1>
-            <p className="text-sm text-slate-400">Cosine similarity demonstration on 32 AI-generated portrait UI assets &amp; 5,000 synthetic Nagpur demo profiles.</p>
+            <h1 className="text-2xl font-bold text-white tracking-tight">Biometric Suspect Matching (ArcFace)</h1>
+            <p className="text-sm text-slate-400">Deep CNN visual embedding extraction and cosine similarity matching across 5,000 enrolled suspect profiles.</p>
           </div>
         </div>
 
@@ -371,10 +356,10 @@ export default function FaceMatchingPage() {
           <button
             onClick={() => setShowDatasetModal(true)}
             className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-2 border border-slate-700 transition-colors"
-            title="Inspect 5,000 Synthetic Nagpur Demo Profiles and 32 Portraits"
+            title="Inspect Enrolled Suspect Records and Portrait Embeddings"
           >
             <FolderOpen className="w-4 h-4 text-cyan-400" />
-            <span>Dataset &amp; 32 Portraits (5,000 Demo)</span>
+            <span>Database &amp; Portraits (5,000 Records)</span>
           </button>
         </div>
       </header>

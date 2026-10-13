@@ -7,7 +7,7 @@ import TopBar from '@/components/layout/top-bar';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [userName, setUserName] = useState('Demo Admin');
+  const [userName, setUserName] = useState('Admin Officer');
   const [userRole, setUserRole] = useState('admin');
 
   useEffect(() => {
@@ -51,7 +51,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         />
         
         <div className="flex flex-col flex-1 overflow-hidden min-w-0">
-          <SyntheticBanner />
           <TopBar 
             userName={userName}
             userRole={userRole}

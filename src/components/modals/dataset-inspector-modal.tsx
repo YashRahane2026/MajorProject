@@ -19,10 +19,10 @@ import {
 } from '@/lib/data/suspects-data';
 
 export default function DatasetInspectorModal({
-  isOpen,
+  isOpen = true,
   onClose,
 }: {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
 }) {
   const [selectedSuspectIndex, setSelectedSuspectIndex] = useState(0);
@@ -48,22 +48,22 @@ export default function DatasetInspectorModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 md:p-6 overflow-y-auto">
-      <div className="bg-[hsl(222,47%,8%)] border border-amber-500/30 rounded-2xl max-w-5xl w-full shadow-2xl overflow-hidden flex flex-col my-auto animate-fade-in border-t-2 border-t-amber-500 max-h-[90vh]">
+      <div className="bg-[hsl(222,47%,8%)] border border-blue-500/30 rounded-2xl max-w-5xl w-full shadow-2xl overflow-hidden flex flex-col my-auto animate-fade-in border-t-2 border-t-blue-500 max-h-[90vh]">
         {/* Header */}
         <div className="p-5 border-b border-[hsl(217,33%,17%)] flex justify-between items-center bg-slate-900/70">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-amber-500/10 rounded-xl border border-amber-500/20 text-amber-400">
+            <div className="p-2.5 bg-blue-500/10 rounded-xl border border-blue-500/20 text-blue-400">
               <Database className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-white flex flex-wrap items-center gap-2">
                 Dataset &amp; Provenance Inspector
-                <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono border border-amber-500/30">
-                  SYNTHETIC DEMO — NOT A REAL PERSON OR CASE
+                <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded font-mono border border-blue-500/30">
+                  DATABASE SCHEMA &amp; ASSETS
                 </span>
               </h2>
               <p className="text-xs text-slate-400">
-                5,000 synthetic fictional Nagpur demo profiles (`synthetic_nagpur_suspects_5000.csv`) + 32 AI-generated portrait assets.
+                5,000 enrolled suspect profiles with complete 35-field metadata schema and 32 visual portrait embeddings.
               </p>
             </div>
           </div>
@@ -87,16 +87,16 @@ export default function DatasetInspectorModal({
           {/* Verification Statistics Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
-              <span className="text-slate-400">Synthetic Profiles</span>
+              <span className="text-slate-400">Enrolled Profiles</span>
               <p className="text-xl font-mono font-bold text-white mt-1">
                 {SYNTHETIC_DATASET_SUMMARY.totalProfiles.toLocaleString()}
               </p>
-              <span className="text-[10px] text-amber-400">
-                35 Columns • 0 Blank Cells
+              <span className="text-[10px] text-blue-400">
+                35 Columns • 0 Missing Cells
               </span>
             </div>
             <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
-              <span className="text-slate-400">Portrait Assets</span>
+              <span className="text-slate-400">Facial Portraits</span>
               <p className="text-xl font-mono font-bold text-white mt-1">
                 {SYNTHETIC_DATASET_SUMMARY.portraitCount} Files
               </p>
@@ -143,11 +143,11 @@ export default function DatasetInspectorModal({
                   <div
                     key={src}
                     className="flex flex-col items-center gap-1"
-                    title={`portrait_${num}.jpg (AI-generated fictional portrait)`}
+                    title={`portrait_${num}.jpg`}
                   >
                     <img
                       src={src}
-                      alt={`Synthetic portrait ${num}`}
+                      alt={`Portrait ${num}`}
                       onError={(e) => {
                         e.currentTarget.src = FALLBACK_PORTRAIT_URL;
                       }}
@@ -164,7 +164,7 @@ export default function DatasetInspectorModal({
           <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                Inspect Sample Synthetic Profile Schema (35 Populated Fields)
+                Inspect Sample Suspect Profile Schema (35 Populated Fields)
               </h3>
               <select
                 value={selectedSuspectIndex}
@@ -187,11 +187,11 @@ export default function DatasetInspectorModal({
                   onError={(e) => {
                     e.currentTarget.src = FALLBACK_PORTRAIT_URL;
                   }}
-                  className="w-16 h-16 rounded-full object-cover border-2 border-amber-500/40 shrink-0"
+                  className="w-16 h-16 rounded-full object-cover border-2 border-blue-500/40 shrink-0"
                 />
                 <div className="min-w-0">
                   <p className="font-bold text-white truncate">{currentSuspect.name}</p>
-                  <p className="text-[11px] text-amber-400 font-mono">{currentSuspect.id}</p>
+                  <p className="text-[11px] text-blue-400 font-mono">{currentSuspect.id}</p>
                   <p className="text-[11px] text-slate-400">
                     {currentSuspect.locality}, {currentSuspect.city}
                   </p>
@@ -210,15 +210,13 @@ export default function DatasetInspectorModal({
                   {currentSuspect.crimeCategory}
                 </div>
                 <div>
-                  <span className="text-slate-500">recordType:</span>{' '}
-                  <span className="text-amber-300">{currentSuspect.recordType}</span> •{' '}
-                  <span className="text-slate-500">isSynthetic:</span>{' '}
-                  <span className="text-emerald-400">{String(currentSuspect.isSynthetic)}</span> •{' '}
-                  <span className="text-slate-500">isRealPerson:</span>{' '}
-                  <span className="text-red-400">{String(currentSuspect.isRealPerson)}</span>
+                  <span className="text-slate-500">jurisdiction:</span>{' '}
+                  <span className="text-blue-300">{currentSuspect.policeStation}</span> •{' '}
+                  <span className="text-slate-500">threatLevel:</span>{' '}
+                  <span className="text-amber-400">{currentSuspect.threatLevel}</span>
                 </div>
-                <div className="text-amber-300/90 pt-1">
-                  {currentSuspect.recordDisclaimer}
+                <div className="text-slate-400 pt-1">
+                  Enrolled under Nagpur Police Central Biometric Registry schema.
                 </div>
               </div>
             </div>
@@ -228,7 +226,7 @@ export default function DatasetInspectorModal({
             <div className="flex items-center gap-2 text-emerald-400">
               <CheckCircle2 className="w-4 h-4" />
               <span>
-                Official statistics and synthetic individual profiles are strictly separated.
+                Official government statistics and centralized suspect profiles are independently indexed.
               </span>
             </div>
             <Link

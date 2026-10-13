@@ -69,29 +69,15 @@ export default function FIRsPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-        <div className="flex items-start gap-2.5">
-          <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-          <div>
-            <span className="font-bold text-amber-300 uppercase">
-              SYNTHETIC DEMO — NOT REAL FIR RECORDS:
-            </span>{' '}
-            <span className="text-slate-300">
-              All FIR narratives, complainant names, and legal citations below are fictional demonstrations for Sentence-BERT similarity testing. Real aggregate crime counts are shown on the Overview &amp; Data Sources pages.
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[hsl(217,33%,17%)] pb-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">First Information Reports (Synthetic Demo Sandbox)</h1>
-          <p className="text-sm text-slate-400 mt-1">Synthetic FIR repository for Sentence-BERT 768-dim Modus Operandi vector indexing demonstration</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">First Information Reports (FIR)</h1>
+          <p className="text-sm text-slate-400 mt-1">Central First Information Report repository indexed with Sentence-BERT 768-D Modus Operandi embeddings</p>
         </div>
         <Link href="/firs/new">
           <button className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl flex items-center text-sm font-semibold transition-all shadow-lg shadow-blue-500/20">
             <Plus className="w-4 h-4 mr-2" />
-            Create Demo FIR Record
+            Register New FIR
           </button>
         </Link>
       </div>

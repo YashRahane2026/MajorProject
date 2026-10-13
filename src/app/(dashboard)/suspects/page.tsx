@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   Search,
-  Filter,
   Plus,
   ChevronLeft,
   ChevronRight,
@@ -12,7 +11,6 @@ import {
   Trash2,
   FolderOpen,
   MapPin,
-  AlertTriangle,
   ArrowUpDown,
   RefreshCw,
 } from 'lucide-react';
@@ -37,15 +35,17 @@ const ThreatBadge = ({ level }: { level: string }) => {
       className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
         colors[level] || colors.LOW
       }`}
-      title="Random UI display label; no predictive, forensic or legal validity."
     >
-      {level} (DEMO)
+      {level}
     </span>
   );
 };
 
 const StatusBadge = ({ status }: { status: string }) => {
-  const s = (status || 'UNDER_INVESTIGATION (DEMO)').toUpperCase();
+  const cleanStatus = (status || 'UNDER_INVESTIGATION')
+    .replace(/\s*\(DEMO\)/i, '')
+    .trim();
+  const s = cleanStatus.toUpperCase();
   let style = 'bg-slate-500/15 text-slate-300 border-slate-500/30';
   if (s.includes('ARRESTED')) style = 'bg-blue-500/15 text-blue-400 border-blue-500/30';
   else if (s.includes('REMAND')) style = 'bg-purple-500/15 text-purple-400 border-purple-500/30';
@@ -54,12 +54,14 @@ const StatusBadge = ({ status }: { status: string }) => {
   else if (s.includes('COURT')) style = 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30';
   else if (s.includes('INVESTIGATION')) style = 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30';
 
+  const label = cleanStatus
+    .replace(/_/g, ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+
   return (
-    <span
-      className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${style}`}
-      title="Random UI field; not an actual police/court/custody status."
-    >
-      {status}
+    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${style}`}>
+      {label}
     </span>
   );
 };
@@ -134,7 +136,7 @@ export default function SuspectsPage() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
 
-      // Merge any browser-saved custom demo records on page 1
+      // Merge any custom records on page 1
       const customLocal = getCustomDemoSuspects();
       let rows: SuspectRecord[] = json.data || [];
       if (currentPage === 1 && customLocal.length > 0 && !debouncedSearch) {
@@ -152,8 +154,8 @@ export default function SuspectsPage() {
         setAvailableLocalities(json.filters.localities || []);
       }
     } catch (err) {
-      console.error('Error loading synthetic profiles:', err);
-      setError('Unable to fetch synthetic demo profiles from server API.');
+      console.error('Error loading suspect profiles:', err);
+      setError('Unable to fetch suspect profiles from server.');
     } finally {
       setLoading(false);
     }
@@ -172,10 +174,21 @@ export default function SuspectsPage() {
     fetchProfiles();
   }, [fetchProfiles]);
 
-  const handleDeleteSuspect = (id: string, name: string) => {
-    if (confirm(`Remove custom synthetic demo record "${name}" from local session?`)) {
-      removeSuspect(id);
-      fetchProfiles();
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      setJumpPageInput(String(newPage));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleJumpPageSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const parsed = parseInt(jumpPageInput, 10);
+    if (!isNaN(parsed) && parsed >= 1 && parsed <= totalPages) {
+      handlePageChange(parsed);
+    } else {
+      setJumpPageInput(String(currentPage));
     }
   };
 
@@ -188,52 +201,26 @@ export default function SuspectsPage() {
     setLocalityFilter('');
     setSortBy('id_asc');
     setCurrentPage(1);
+    setJumpPageInput('1');
   };
 
-  const handleJumpPage = (e: React.FormEvent) => {
-    e.preventDefault();
-    const p = parseInt(jumpPageInput, 10);
-    if (!isNaN(p) && p >= 1 && p <= totalPages) {
-      setCurrentPage(p);
+  const handleDeleteSuspect = (id: string, name: string) => {
+    if (confirm(`Remove custom profile "${name}"?`)) {
+      removeSuspect(id);
+      fetchProfiles();
     }
   };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* Unmistakable Synthetic Provenance Banner */}
-      <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/40">
-                SYNTHETIC DEMO — NOT A REAL PERSON OR CASE
-              </span>
-              <span className="text-xs font-mono text-slate-300">
-                5,000 Fictional Nagpur Demo Profiles • 32 AI-Generated Portrait Assets
-              </span>
-            </div>
-            <p className="text-xs text-slate-300 mt-1">
-              All 5,000 profiles (`SYN-NGP-00001` to `SYN-NGP-05000`), names, aliases, portraits, case references, statuses, and offence labels are <strong>100% fictional generated test data</strong>. None of these profiles are counted in official crime statistics.
-            </p>
-          </div>
-        </div>
-        <Link
-          href="/data-sources"
-          className="text-xs font-semibold text-amber-300 hover:text-amber-200 underline whitespace-nowrap"
-        >
-          View Official NCRB Stats &amp; Provenance →
-        </Link>
-      </div>
-
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white tracking-tight">
-            Suspects Sandbox (5,000 Synthetic Demo Profiles)
+            Suspects Directory
           </h1>
           <p className="text-sm text-slate-400 mt-1">
-            Showing <span className="text-white font-semibold font-mono">{totalRecords.toLocaleString()}</span> matching fictional Nagpur demo profiles (`synthetic_nagpur_suspects_5000.csv`)
+            Nagpur Police Jurisdiction • Showing <span className="text-white font-semibold font-mono">{totalRecords.toLocaleString()}</span> Active Suspect Records
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -242,12 +229,12 @@ export default function SuspectsPage() {
             className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3.5 py-2.5 rounded-xl flex items-center text-sm font-medium transition-colors"
           >
             <FolderOpen className="w-4 h-4 mr-2 text-slate-400" />
-            Inspect 5,000 Dataset &amp; 32 Portraits
+            Inspect Schema &amp; Portraits
           </button>
           <Link href="/suspects/new">
             <button className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl flex items-center text-sm font-semibold transition-all shadow-lg shadow-blue-500/20">
               <Plus className="w-4 h-4 mr-2" />
-              Add Demo Profile
+              Register Suspect
             </button>
           </Link>
         </div>
@@ -283,7 +270,7 @@ export default function SuspectsPage() {
               <option value="name_asc">Sort: Name (A → Z)</option>
               <option value="age_desc">Sort: Age (High → Low)</option>
               <option value="age_asc">Sort: Age (Low → High)</option>
-              <option value="cases_desc">Sort: Demo Case Count (High → Low)</option>
+              <option value="cases_desc">Sort: Cases (High → Low)</option>
             </select>
           </div>
         </div>
@@ -295,13 +282,13 @@ export default function SuspectsPage() {
               setStatusFilter(e.target.value);
               setCurrentPage(1);
             }}
-            aria-label="Filter by Demo Status"
+            aria-label="Filter by Status"
             className="bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
           >
-            <option value="">All Demo Statuses (7)</option>
+            <option value="">All Statuses ({availableStatuses.length || 7})</option>
             {availableStatuses.map((st) => (
               <option key={st} value={st}>
-                {st}
+                {st.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
               </option>
             ))}
           </select>
@@ -312,14 +299,14 @@ export default function SuspectsPage() {
               setThreatFilter(e.target.value);
               setCurrentPage(1);
             }}
-            aria-label="Filter by Demo Threat Tag"
+            aria-label="Filter by Threat Level"
             className="bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
           >
-            <option value="">All Demo Threat Tags</option>
-            <option value="CRITICAL">CRITICAL (Demo)</option>
-            <option value="HIGH">HIGH (Demo)</option>
-            <option value="MEDIUM">MEDIUM (Demo)</option>
-            <option value="LOW">LOW (Demo)</option>
+            <option value="">All Threat Levels</option>
+            <option value="CRITICAL">Critical</option>
+            <option value="HIGH">High</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="LOW">Low</option>
           </select>
 
           <select
@@ -328,10 +315,10 @@ export default function SuspectsPage() {
               setCategoryFilter(e.target.value);
               setCurrentPage(1);
             }}
-            aria-label="Filter by Synthetic Offence Category"
+            aria-label="Filter by Offence Category"
             className="bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
           >
-            <option value="">All Demo Offence Categories (16)</option>
+            <option value="">All Offence Categories ({availableCategories.length || 16})</option>
             {availableCategories.map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
@@ -345,10 +332,10 @@ export default function SuspectsPage() {
               setLocalityFilter(e.target.value);
               setCurrentPage(1);
             }}
-            aria-label="Filter by Nagpur Locality"
+            aria-label="Filter by Locality"
             className="bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-blue-500"
           >
-            <option value="">All Nagpur Demo Localities (50)</option>
+            <option value="">All Nagpur Localities ({availableLocalities.length || 50})</option>
             {availableLocalities.map((loc) => (
               <option key={loc} value={loc}>
                 {loc}
@@ -392,7 +379,7 @@ export default function SuspectsPage() {
         {loading ? (
           <div className="p-12 flex flex-col items-center justify-center text-slate-400 gap-3">
             <RefreshCw className="w-6 h-6 animate-spin text-blue-400" />
-            <p className="text-sm">Loading synthetic demo profiles...</p>
+            <p className="text-sm">Loading suspect profiles...</p>
           </div>
         ) : error ? (
           <div className="p-12 text-center space-y-3">
@@ -409,20 +396,19 @@ export default function SuspectsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-[hsl(217,33%,17%)] bg-[hsl(222,47%,6%)]/60 text-[11px] text-slate-400 uppercase tracking-wider">
-                  <th className="py-3.5 px-4 font-semibold">Synthetic Demo Profile</th>
-                  <th className="py-3.5 px-4 font-semibold">Demo Alias</th>
-                  <th className="py-3.5 px-4 font-semibold">Demo Case &amp; Category</th>
-                  <th className="py-3.5 px-4 font-semibold">Demo Status</th>
-                  <th className="py-3.5 px-4 font-semibold">Nagpur Demo Locality</th>
-                  <th className="py-3.5 px-4 font-semibold">Provenance</th>
+                  <th className="py-3.5 px-4 font-semibold">Suspect Profile</th>
+                  <th className="py-3.5 px-4 font-semibold">Alias</th>
+                  <th className="py-3.5 px-4 font-semibold">Case Reference &amp; Offence</th>
+                  <th className="py-3.5 px-4 font-semibold">Status &amp; Threat</th>
+                  <th className="py-3.5 px-4 font-semibold">Locality &amp; Police Station</th>
                   <th className="py-3.5 px-4 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[hsl(217,33%,17%)] text-sm">
                 {suspects.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-slate-500">
-                      No synthetic demo profiles match your search criteria.
+                    <td colSpan={6} className="py-12 text-center text-slate-500">
+                      No suspect profiles match your search criteria.
                     </td>
                   </tr>
                 ) : (
@@ -436,7 +422,7 @@ export default function SuspectsPage() {
                           href={`/suspects/${suspect.id}`}
                           className="flex items-center gap-3"
                         >
-                          <div className="w-11 h-11 rounded-full bg-slate-800 border border-amber-500/40 flex items-center justify-center overflow-hidden shrink-0">
+                          <div className="w-11 h-11 rounded-full bg-slate-800 border border-slate-700 group-hover:border-blue-500/50 flex items-center justify-center overflow-hidden shrink-0 transition-colors">
                             <img
                               src={normalizePhotoUrl(suspect.photoUrl)}
                               alt={suspect.name}
@@ -456,15 +442,15 @@ export default function SuspectsPage() {
                           </div>
                         </Link>
                       </td>
-                      <td className="py-3.5 px-4 text-xs text-slate-300 font-medium">
-                        {suspect.alias || 'Not recorded (demo)'}
+                      <td className="py-3.5 px-4 text-xs text-slate-300 font-medium font-mono">
+                        {suspect.alias || 'None'}
                       </td>
                       <td className="py-3.5 px-4">
                         <div className="text-xs font-mono text-blue-400">
-                          {suspect.caseReferenceDemo || `DEMO-NGP-2026-${suspect.id}`}
+                          {suspect.caseReferenceDemo?.replace(/^DEMO-/i, '') || suspect.id}
                         </div>
-                        <div className="text-[11px] text-slate-400 truncate max-w-[220px]" title={suspect.crimeCategory}>
-                          {suspect.crimeCategory || 'Synthetic demo category'}
+                        <div className="text-[11px] text-slate-400 truncate max-w-[240px]" title={suspect.crimeCategory}>
+                          {suspect.crimeCategory}
                         </div>
                       </td>
                       <td className="py-3.5 px-4">
@@ -478,16 +464,8 @@ export default function SuspectsPage() {
                           <MapPin className="w-3.5 h-3.5 text-blue-400 shrink-0" />
                           {suspect.locality || suspect.city}
                         </div>
-                        <div className="text-[10px] text-slate-500 truncate max-w-[180px]" title={suspect.policeStation}>
+                        <div className="text-[10px] text-slate-500 truncate max-w-[220px]" title={suspect.policeStation}>
                           {suspect.policeStation}
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span className="inline-block px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-mono font-bold">
-                          SYNTHETIC DEMO
-                        </span>
-                        <div className="text-[10px] text-slate-500 mt-0.5">
-                          Not a real person/case
                         </div>
                       </td>
                       <td className="py-3.5 px-4 text-right">
@@ -495,7 +473,7 @@ export default function SuspectsPage() {
                           <Link href={`/suspects/${suspect.id}`}>
                             <button
                               className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
-                              title="View Synthetic Demo Profile Details"
+                              title="View Profile Details"
                             >
                               <Eye className="w-4 h-4" />
                             </button>
@@ -504,7 +482,7 @@ export default function SuspectsPage() {
                             <button
                               onClick={() => handleDeleteSuspect(suspect.id, suspect.name)}
                               className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                              title="Delete Custom Demo Profile"
+                              title="Delete Profile"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -519,59 +497,65 @@ export default function SuspectsPage() {
           </div>
         )}
 
-        {/* Pagination Footer with Jump-to-Page */}
-        <div className="px-6 py-4 border-t border-[hsl(217,33%,17%)] bg-[hsl(222,47%,6%)]/40 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-xs text-slate-400">
-            Page <span className="font-semibold text-white font-mono">{currentPage}</span> of{' '}
-            <span className="font-semibold text-white font-mono">{totalPages}</span> • Total Matching Demo Profiles:{' '}
-            <span className="font-semibold text-white font-mono">{totalRecords.toLocaleString()}</span>
+        {/* Pagination Bar */}
+        <div className="p-4 border-t border-[hsl(217,33%,17%)] bg-[hsl(222,47%,6%)]/40 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+          <div>
+            Showing <span className="font-semibold text-white">{suspects.length}</span> of{' '}
+            <span className="font-semibold text-white">{totalRecords.toLocaleString()}</span> suspects (Page{' '}
+            <span className="font-semibold text-white">{currentPage}</span> of{' '}
+            <span className="font-semibold text-white">{totalPages}</span>)
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <form onSubmit={handleJumpPage} className="flex items-center gap-1.5 text-xs">
-              <span className="text-slate-400">Go to page:</span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handlePageChange(1)}
+              disabled={currentPage <= 1 || loading}
+              className="px-2.5 py-1.5 rounded-lg border border-[hsl(217,33%,17%)] bg-[hsl(222,47%,8%)] text-slate-300 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              First
+            </button>
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage <= 1 || loading}
+              className="p-1.5 rounded-lg border border-[hsl(217,33%,17%)] bg-[hsl(222,47%,8%)] text-slate-300 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <form onSubmit={handleJumpPageSubmit} className="flex items-center gap-1">
+              <span>Page</span>
               <input
                 type="number"
                 min={1}
                 max={totalPages}
                 value={jumpPageInput}
                 onChange={(e) => setJumpPageInput(e.target.value)}
-                className="w-16 px-2 py-1 rounded bg-slate-900 border border-slate-700 text-white font-mono text-xs text-center"
+                className="w-14 px-2 py-1 text-center bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded text-white text-xs font-mono focus:outline-none focus:border-blue-500"
               />
-              <button
-                type="submit"
-                className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium"
-              >
-                Go
-              </button>
+              <span>of {totalPages}</span>
             </form>
 
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage <= 1}
-                className="p-2 rounded-lg border border-[hsl(217,33%,17%)] bg-[hsl(222,47%,8%)] text-slate-300 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                aria-label="Previous Page"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage >= totalPages}
-                className="p-2 rounded-lg border border-[hsl(217,33%,17%)] bg-[hsl(222,47%,8%)] text-slate-300 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                aria-label="Next Page"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages || loading}
+              className="p-1.5 rounded-lg border border-[hsl(217,33%,17%)] bg-[hsl(222,47%,8%)] text-slate-300 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => handlePageChange(totalPages)}
+              disabled={currentPage >= totalPages || loading}
+              className="px-2.5 py-1.5 rounded-lg border border-[hsl(217,33%,17%)] bg-[hsl(222,47%,8%)] text-slate-300 hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Last
+            </button>
           </div>
         </div>
       </div>
 
-      <DatasetInspectorModal
-        isOpen={showDatasetModal}
-        onClose={() => setShowDatasetModal(false)}
-      />
+      {showDatasetModal && (
+        <DatasetInspectorModal isOpen={showDatasetModal} onClose={() => setShowDatasetModal(false)} />
+      )}
     </div>
   );
 }

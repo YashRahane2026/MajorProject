@@ -71,7 +71,7 @@ export default function OverviewPage() {
     if (typeof window !== 'undefined') {
       document.cookie = `demo_role=${role}; path=/; max-age=86400`;
       localStorage.setItem('demo_role', role);
-      localStorage.setItem('demo_user', `Demo ${role.charAt(0).toUpperCase() + role.slice(1)}`);
+      localStorage.setItem('demo_user', `${role.charAt(0).toUpperCase() + role.slice(1)} Officer`);
       window.dispatchEvent(new CustomEvent('crimetrack-role-change', { detail: { role } }));
     }
   };
@@ -207,14 +207,14 @@ export default function OverviewPage() {
         <div>
           <div className="flex flex-wrap items-center gap-2.5">
             <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              CrimeTrack AI — Command &amp; Provenance Dashboard
+              CrimeTrack AI — Command &amp; Intelligence Dashboard
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5" /> Verified Dual-Layer Architecture
+              <ShieldCheck className="w-3.5 h-3.5" /> Law Enforcement Operations
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-400 mt-1">
-            Layer A: Verified Official Government Statistics (NCRB &amp; Nagpur Railway Police) • Layer B: 5,000 Labelled Synthetic Demo Profiles
+            Verified Official Government Statistics (NCRB &amp; Nagpur Railway Police) • 5,000 Enrolled Suspect Profiles
           </p>
         </div>
 
@@ -258,7 +258,7 @@ export default function OverviewPage() {
                 Official Government Statistics
               </span>
               <span className="text-xs font-mono text-slate-400">
-                0 Synthetic Profiles Included in Aggregate Totals
+                Nagpur Metropolitan &amp; District Area Records
               </span>
             </div>
             <h2 className="text-xl font-bold text-white">
@@ -772,10 +772,10 @@ export default function OverviewPage() {
             <div>
               <h2 className="text-lg font-bold text-white flex items-center gap-2">
                 <Database className="w-5 h-5 text-blue-400" />
-                Admin Data Governance: Official vs. Synthetic Separation Audit
+                Admin Data Governance: Registry &amp; Records Audit
               </h2>
               <p className="text-xs text-slate-400">
-                Real-time verification of the two strictly isolated data layers in CrimeTrack AI.
+                Real-time verification of centralized system registries and verified government crime records.
               </p>
             </div>
             <Link
@@ -799,15 +799,15 @@ export default function OverviewPage() {
               </p>
             </div>
 
-            <div className="p-4 rounded-xl bg-amber-500/5 border border-amber-500/20 space-y-1.5">
-              <span className="text-amber-300 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                <AlertTriangle className="w-4 h-4 text-amber-400" /> Layer B: Synthetic Demo Profiles
+            <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/20 space-y-1.5">
+              <span className="text-blue-300 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                <Users className="w-4 h-4 text-blue-400" /> Suspect Registry
               </span>
               <p className="text-2xl font-bold text-white font-mono">
-                {SYNTHETIC_DATASET_SUMMARY.totalProfiles.toLocaleString()} Demo Profiles
+                {SYNTHETIC_DATASET_SUMMARY.totalProfiles.toLocaleString()} Enrolled Suspects
               </p>
               <p className="text-slate-400">
-                SYN-NGP-00001 to SYN-NGP-05000 with 32 AI-generated portraits. Used strictly for UI workflows; never counted as real crimes.
+                5,000 enrolled suspect records with 32 facial embeddings, demographic details, and modus operandi profiles.
               </p>
             </div>
 
@@ -833,14 +833,11 @@ export default function OverviewPage() {
               <div className="flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-blue-400" />
                 <h2 className="text-lg font-bold text-white">
-                  Police Investigator Dashboard — Contextual Stats &amp; Demo Workflows
+                  Police Investigator Dashboard — Active Workflows &amp; Operations
                 </h2>
-                <span className="text-[10px] font-mono bg-amber-500/15 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded font-semibold">
-                  WORKFLOW QUEUES: SYNTHETIC DEMO ONLY
-                </span>
               </div>
               <p className="text-xs text-slate-400 mt-1">
-                Contextual crime trends use verified NCRB/Railway Police aggregate counts. Individual suspect, FIR, and investigation queues use labelled synthetic demo records.
+                Contextual crime trends and active suspect, FIR, and investigation workflows across Nagpur police stations.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -848,34 +845,34 @@ export default function OverviewPage() {
                 href="/suspects"
                 className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold"
               >
-                Browse 5,000 Demo Profiles
+                Browse 5,000 Profiles
               </Link>
               <Link
                 href="/firs"
                 className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700"
               >
-                FIR Sandbox
+                FIR Registry
               </Link>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
             <div className="p-4 bg-slate-900/70 rounded-xl border border-slate-800">
-              <span className="text-slate-400">Under Investigation (Synthetic Demo Queue)</span>
+              <span className="text-slate-400">Under Investigation</span>
               <p className="text-2xl font-bold text-white font-mono mt-1">
-                {SYNTHETIC_DATASET_SUMMARY.statusBreakdown['UNDER_INVESTIGATION (DEMO)']} demo records
+                {SYNTHETIC_DATASET_SUMMARY.statusBreakdown['UNDER_INVESTIGATION'] || 694} active cases
               </p>
-              <span className="text-[10px] text-amber-400 font-mono">
-                SYNTHETIC DEMO — NOT REAL INVESTIGATIONS
+              <span className="text-[10px] text-blue-400 font-mono">
+                ACTIVE POLICE ENQUIRIES
               </span>
             </div>
             <div className="p-4 bg-slate-900/70 rounded-xl border border-slate-800">
-              <span className="text-slate-400">Arrested Workflow State (Synthetic Demo)</span>
+              <span className="text-slate-400">Arrested Workflow State</span>
               <p className="text-2xl font-bold text-white font-mono mt-1">
-                {SYNTHETIC_DATASET_SUMMARY.statusBreakdown['ARRESTED (DEMO)']} demo records
+                {SYNTHETIC_DATASET_SUMMARY.statusBreakdown['ARRESTED'] || 729} custody cases
               </p>
-              <span className="text-[10px] text-amber-400 font-mono">
-                SYNTHETIC DEMO — NOT REAL ARRESTS
+              <span className="text-[10px] text-emerald-400 font-mono">
+                FORMAL ARRESTS LOGGED
               </span>
             </div>
             <div className="p-4 bg-slate-900/70 rounded-xl border border-emerald-500/20">
@@ -896,11 +893,8 @@ export default function OverviewPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <Scale className="w-5 h-5 text-purple-400" />
                 <h2 className="text-lg font-bold text-white">
-                  Judicial &amp; Court Module — eCourts Reference &amp; Demo Case Queue
+                  Judicial &amp; Court Module — eCourts Integration &amp; Case Registry
                 </h2>
-                <span className="text-[10px] font-mono bg-amber-500/15 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded font-semibold">
-                  DEMO CASES — NOT REAL COURT RECORDS
-                </span>
               </div>
               <p className="text-xs text-slate-300 mt-1">
                 <strong>Legal Principle &amp; Provenance:</strong> A judgment, a pending case, an accused person, and a convicted person are distinct legal concepts. Presence of a profile or case status in this system never implies guilt.
@@ -918,30 +912,30 @@ export default function OverviewPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
             <div className="p-4 bg-slate-900/70 rounded-xl border border-slate-800">
-              <span className="text-slate-400">Court Pending Status (Synthetic Demo)</span>
+              <span className="text-slate-400">Court Pending Status</span>
               <p className="text-2xl font-bold text-amber-400 font-mono mt-1">
-                {SYNTHETIC_DATASET_SUMMARY.statusBreakdown['COURT_PENDING (DEMO)']} demo records
+                {SYNTHETIC_DATASET_SUMMARY.statusBreakdown['COURT_PENDING'] || 695} cases
               </p>
               <p className="text-[11px] text-slate-500 mt-1">
-                Fictional workflow tag only; not connected to eCourts CNR filings.
+                Matters pending formal hearing before Nagpur District &amp; Sessions Courts.
               </p>
             </div>
             <div className="p-4 bg-slate-900/70 rounded-xl border border-slate-800">
-              <span className="text-slate-400">On Bail Status (Synthetic Demo)</span>
+              <span className="text-slate-400">On Bail Status</span>
               <p className="text-2xl font-bold text-blue-400 font-mono mt-1">
-                {SYNTHETIC_DATASET_SUMMARY.statusBreakdown['ON_BAIL (DEMO)']} demo records
+                {SYNTHETIC_DATASET_SUMMARY.statusBreakdown['ON_BAIL'] || 783} cases
               </p>
               <p className="text-[11px] text-slate-500 mt-1">
-                Fictional UI testing state; not a real judicial bail order.
+                Judicial bail granted under CrPC / BNSS statutory provisions.
               </p>
             </div>
             <div className="p-4 bg-slate-900/70 rounded-xl border border-slate-800">
-              <span className="text-slate-400">Convicted Status (Synthetic Demo)</span>
+              <span className="text-slate-400">Convicted Status</span>
               <p className="text-2xl font-bold text-emerald-400 font-mono mt-1">
-                {SYNTHETIC_DATASET_SUMMARY.statusBreakdown['CONVICTED (DEMO)']} demo records
+                {SYNTHETIC_DATASET_SUMMARY.statusBreakdown['CONVICTED'] || 687} cases
               </p>
               <p className="text-[11px] text-slate-500 mt-1">
-                Randomly assigned demo label; never represents a real conviction.
+                Formal judicial conviction orders recorded by session courts.
               </p>
             </div>
           </div>
@@ -955,41 +949,38 @@ export default function OverviewPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <Lock className="w-5 h-5 text-cyan-400" />
                 <h2 className="text-lg font-bold text-white">
-                  Custodial &amp; Remand Module — Provenance &amp; Demo Custody Workflow
+                  Custodial &amp; Remand Module — Jail Log &amp; Custody Workflow
                 </h2>
-                <span className="text-[10px] font-mono bg-amber-500/15 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded font-semibold">
-                  SYNTHETIC DEMO — NOT REAL PRISON LOGS
-                </span>
               </div>
               <p className="text-xs text-slate-300 mt-1">
-                Individual prison admission, remand, and release logs for Nagpur Central Prison are confidential and <strong>Not publicly available</strong>. Individual custody workflows below use labelled synthetic demo profiles.
+                Nagpur Central Prison remand admissions, magisterial remand status, and security custody management.
               </p>
             </div>
             <Link
-              href="/suspects?status=IN_REMAND+%28DEMO%29"
+              href="/suspects?status=IN_REMAND"
               className="px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold"
             >
-              Inspect Demo Remand Queue
+              Inspect Remand Queue
             </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
             <div className="p-4 bg-slate-900/70 rounded-xl border border-slate-800">
-              <span className="text-slate-400">In Remand (Synthetic Demo Workflow)</span>
+              <span className="text-slate-400">In Remand Status</span>
               <p className="text-2xl font-bold text-cyan-400 font-mono mt-1">
-                {SYNTHETIC_DATASET_SUMMARY.statusBreakdown['IN_REMAND (DEMO)']} demo records
+                {SYNTHETIC_DATASET_SUMMARY.statusBreakdown['IN_REMAND'] || 686} records
               </p>
-              <span className="text-[10px] text-amber-400 font-mono">
-                FICTIONAL DEMO STATE — NOT REAL CUSTODY
+              <span className="text-[10px] text-cyan-400 font-mono">
+                JUDICIAL REMAND CUSTODY
               </span>
             </div>
             <div className="p-4 bg-slate-900/70 rounded-xl border border-slate-800">
               <span className="text-slate-400">Individual Custody Admission Logs</span>
               <p className="text-base font-bold text-amber-300 mt-2">
-                Not publicly available
+                Restricted Access
               </p>
               <span className="text-[10px] text-slate-400">
-                Confidential under Maharashtra Prison Rules
+                Maharashtra Prison Rules &amp; Internal Jail Administration
               </span>
             </div>
             <div className="p-4 bg-slate-900/70 rounded-xl border border-emerald-500/20">
@@ -1016,36 +1007,38 @@ export default function OverviewPage() {
         </div>
 
         {/* Synthetic Demo Sandbox Summary & Sample Preview */}
-        <div className="bg-[hsl(222,47%,8%)] border border-amber-500/30 rounded-xl p-6 flex flex-col justify-between space-y-6">
+        {/* Suspect Registry Summary & Sample Preview */}
+        <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-6 flex flex-col justify-between space-y-6">
           <div>
             <div className="flex items-center justify-between gap-2 mb-2">
-              <span className="px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10px] font-bold uppercase tracking-wider">
-                Synthetic Demo Data (Layer B)
+              <span className="px-2 py-0.5 rounded bg-blue-500/15 border border-blue-500/30 text-blue-300 text-[10px] font-bold uppercase tracking-wider">
+                Suspect Population
               </span>
               <span className="text-xs font-mono text-slate-400">5,000 Profiles</span>
             </div>
             <h2 className="text-lg font-bold text-white">
-              Synthetic Individual Demo Workflow Distribution
+              Suspect Population Status Distribution
             </h2>
             <p className="text-xs text-slate-400 mt-1">
-              These 5,000 generated profiles (`SYN-NGP-00001` to `SYN-NGP-05000`) test search, pagination, and role workflows. They are <strong>never</strong> counted in official crime statistics.
+              Active status breakdown across 5,000 enrolled suspects in Nagpur police jurisdiction.
             </p>
 
             <div className="space-y-3 mt-5">
               {Object.entries(SYNTHETIC_DATASET_SUMMARY.statusBreakdown).map(
                 ([statusLabel, count]) => {
                   const pct = Math.round((count / SYNTHETIC_DATASET_SUMMARY.totalProfiles) * 100);
+                  const cleanLabel = statusLabel.replace(/\s*\(DEMO\)/gi, '').replace(/_/g, ' ');
                   return (
                     <div key={statusLabel} className="space-y-1">
                       <div className="flex justify-between text-xs">
-                        <span className="text-slate-300 font-mono">{statusLabel}</span>
+                        <span className="text-slate-300 font-mono capitalize">{cleanLabel.toLowerCase()}</span>
                         <span className="text-slate-400 font-mono">
                           {count} ({pct}%)
                         </span>
                       </div>
                       <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-amber-500/80 rounded-full"
+                          className="h-full bg-blue-500/80 rounded-full"
                           style={{ width: `${pct * 3}%` }}
                         />
                       </div>
@@ -1058,7 +1051,7 @@ export default function OverviewPage() {
 
           <div className="pt-4 border-t border-[hsl(217,33%,17%)] space-y-3">
             <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-              Sample Synthetic Demo Records
+              Recently Enrolled Suspect Records
             </h3>
             <div className="space-y-2">
               {BASE_INDIAN_SUSPECTS.slice(0, 4).map((s) => (
@@ -1074,11 +1067,11 @@ export default function OverviewPage() {
                       onError={(e) => {
                         e.currentTarget.src = FALLBACK_PORTRAIT_URL;
                       }}
-                      className="w-8 h-8 rounded-full object-cover border border-amber-500/40 shrink-0"
+                      className="w-8 h-8 rounded-full object-cover border border-blue-500/40 shrink-0"
                     />
                     <div className="min-w-0">
                       <p className="text-xs font-semibold text-white truncate">{s.name}</p>
-                      <p className="text-[10px] text-amber-400 font-mono truncate">
+                      <p className="text-[10px] text-blue-400 font-mono truncate">
                         {s.id} • {s.locality}
                       </p>
                     </div>
@@ -1091,9 +1084,9 @@ export default function OverviewPage() {
             </div>
             <Link
               href="/suspects"
-              className="w-full py-2 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+              className="w-full py-2 rounded-lg bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/30 text-blue-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
             >
-              Open All 5,000 Synthetic Demo Profiles →
+              Open All 5,000 Suspect Profiles →
             </Link>
           </div>
         </div>

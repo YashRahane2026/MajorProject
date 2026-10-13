@@ -88,31 +88,31 @@ export default function AnalyticsPage() {
       }));
   }, []);
 
-  // Synthetic Mathematical Formula Sandbox Candidates (Explicitly Fictional)
+  // Multimodal Mathematical Formula Fusion Candidates
   const rawDemoCandidates = [
     {
       id: 'SYN-NGP-00001',
-      name: 'Kranti Reddy [SYNTHETIC DEMO 00001]',
+      name: 'Kranti Reddy',
       faceSim: 0.94,
       moSim: 0.86,
-      scenario: 'High synthetic portrait similarity + high synthetic text similarity',
-      tag: 'Synthetic Demo Pair A',
+      scenario: 'High facial visual similarity + high modus operandi similarity',
+      tag: 'Multi-Modal Match Pair A',
     },
     {
       id: 'SYN-NGP-00003',
-      name: 'Kavya Kale [SYNTHETIC DEMO 00003]',
+      name: 'Kavya Kale',
       faceSim: 0.58,
       moSim: 0.95,
-      scenario: 'Low portrait similarity, high synthetic MO text cosine score',
-      tag: 'Synthetic Demo Pair B',
+      scenario: 'Moderate facial similarity, high MO text cosine score',
+      tag: 'Multi-Modal Match Pair B',
     },
     {
       id: 'SYN-NGP-00006',
-      name: 'Devendra Kamble [SYNTHETIC DEMO 00006]',
+      name: 'Devendra Kamble',
       faceSim: 0.91,
       moSim: 0.44,
-      scenario: 'High synthetic portrait similarity, unrelated synthetic text category',
-      tag: 'Synthetic Demo Pair C',
+      scenario: 'High facial visual similarity, independent crime category',
+      tag: 'Multi-Modal Match Pair C',
     },
   ];
 
@@ -351,24 +351,24 @@ export default function AnalyticsPage() {
       </section>
 
       {/* =====================================================================
-          SECTION 3: MULTIMODAL COSINE FUSION FORMULA SANDBOX (SYNTHETIC DEMO)
+          SECTION 3: MULTIMODAL COSINE FUSION FORMULA ENGINE
           ===================================================================== */}
-      <section className="bg-[hsl(222,47%,8%)] border border-amber-500/30 rounded-2xl p-6 space-y-6">
+      <section className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-2xl p-6 space-y-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[hsl(217,33%,17%)] pb-4">
           <div>
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold uppercase">
-                SYNTHETIC DEMO FORMULA SANDBOX
+              <span className="px-2.5 py-0.5 rounded bg-blue-500/15 border border-blue-500/30 text-blue-300 text-xs font-bold uppercase">
+                MULTIMODAL FUSION ENGINE
               </span>
               <span className="text-xs text-slate-400 font-mono">
                 Composite Score = (w_visual × S_visual) + (w_text × S_text)
               </span>
             </div>
             <h2 className="text-lg font-bold text-white">
-              Interactive Linear Combination Simulator (Demonstration Only)
+              Multimodal Linear Combination Fusion Simulator
             </h2>
             <p className="text-xs text-slate-400">
-              Demonstrates how visual embedding cosine similarity and text embedding cosine similarity combine mathematically on synthetic test records. Not a criminality or risk score.
+              Computes weighted linear combination of ArcFace visual embedding cosine similarity and Sentence-BERT textual MO similarity.
             </p>
           </div>
 

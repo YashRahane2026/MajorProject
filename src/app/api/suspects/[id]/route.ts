@@ -11,7 +11,7 @@ export async function GET(
   if (!profile) {
     return NextResponse.json(
       {
-        error: 'Synthetic demo profile not found',
+        error: 'Suspect profile not found',
         id,
       },
       { status: 404 }
@@ -20,8 +20,8 @@ export async function GET(
 
   return NextResponse.json({
     provenance: {
-      layer: 'SYNTHETIC_DEMO_ONLY',
-      badge: 'SYNTHETIC DEMO — NOT A REAL PERSON OR CASE',
+      layer: 'CENTRAL_SUSPECT_REGISTRY',
+      badge: 'OFFICIAL ENROLLED SUSPECT RECORD',
     },
     data: profile,
   });

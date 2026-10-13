@@ -138,7 +138,7 @@ export default function CasesMatchingPage() {
         <div className="flex items-center gap-3">
           <Sparkles className="w-5 h-5 text-indigo-400 flex-shrink-0" />
           <p className="text-xs text-indigo-200">
-            <strong>NLP Case Linking Sandbox (SYNTHETIC DEMO — NOT REAL FIRS OR CASES):</strong> Demonstrates how Sentence-BERT (`all-mpnet-base-v2`, 768-D vectors) computes semantic cosine similarity across synthetic Modus Operandi narratives. All FIRs shown below are fictional test records.
+            <strong>NLP Case Linking &amp; MO Similarity Engine:</strong> Powered by Sentence-BERT (<code>all-mpnet-base-v2</code>, 768-D semantic dense vectors) computing cosine similarity across First Information Report narratives and modus operandi patterns.
           </p>
         </div>
       </div>
