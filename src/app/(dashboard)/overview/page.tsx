@@ -247,6 +247,116 @@ export default function OverviewPage() {
       </div>
 
       {/* =====================================================================
+          GEOSPATIAL INTELLIGENCE: NAGPUR GIS CRIME MAP & SPATIAL HOTSPOTS
+          ===================================================================== */}
+      <section className="space-y-6">
+        <CityCrimeMap />
+      </section>
+
+      {/* =====================================================================
+          SUSPECT POPULATION ANALYTICS & REGISTRY FEED
+          ===================================================================== */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Suspect Population Status Distribution */}
+        <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-6 flex flex-col justify-between space-y-5 shadow-lg">
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="px-2 py-0.5 rounded bg-blue-500/15 border border-blue-500/30 text-blue-300 text-[10px] font-bold uppercase tracking-wider">
+                Suspect Population
+              </span>
+              <span className="text-xs font-mono text-slate-400">5,000 Profiles</span>
+            </div>
+            <h2 className="text-lg font-bold text-white">
+              Suspect Population Status Distribution
+            </h2>
+            <p className="text-xs text-slate-400 mt-1">
+              Active status breakdown across 5,000 enrolled suspects in Nagpur police jurisdiction.
+            </p>
+
+            <div className="space-y-3 mt-4">
+              {Object.entries(SYNTHETIC_DATASET_SUMMARY.statusBreakdown).map(
+                ([statusLabel, count]) => {
+                  const pct = Math.round((count / SYNTHETIC_DATASET_SUMMARY.totalProfiles) * 100);
+                  const cleanLabel = statusLabel.replace(/\s*\(DEMO\)/gi, '').replace(/_/g, ' ');
+                  return (
+                    <div key={statusLabel} className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-300 font-mono capitalize">{cleanLabel.toLowerCase()}</span>
+                        <span className="text-slate-400 font-mono">
+                          {count} ({pct}%)
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-blue-500/80 rounded-full"
+                          style={{ width: `${pct * 3}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                }
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Recently Enrolled Suspect Records */}
+        <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-6 flex flex-col justify-between space-y-5 shadow-lg">
+          <div>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold uppercase tracking-wider">
+                Biometric Registry
+              </span>
+              <span className="text-xs font-mono text-slate-400">Active Profiles</span>
+            </div>
+            <h2 className="text-lg font-bold text-white">
+              Recently Enrolled Suspect Records
+            </h2>
+            <p className="text-xs text-slate-400 mt-1">
+              Quick access to enrolled suspect records with verified 512-D ArcFace facial embeddings.
+            </p>
+
+            <div className="space-y-2.5 mt-4">
+              {BASE_INDIAN_SUSPECTS.slice(0, 4).map((s) => (
+                <Link
+                  key={s.id}
+                  href={`/suspects/${s.id}`}
+                  className="flex items-center justify-between p-2.5 rounded-lg bg-slate-900/70 hover:bg-slate-800 border border-slate-800 transition-colors"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <img
+                      src={s.photoUrl}
+                      alt={s.name}
+                      onError={(e) => {
+                        e.currentTarget.src = FALLBACK_PORTRAIT_URL;
+                      }}
+                      className="w-9 h-9 rounded-full object-cover border border-blue-500/40 shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-white truncate">{s.name}</p>
+                      <p className="text-[10px] text-blue-400 font-mono truncate">
+                        {s.id} • {s.locality}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 shrink-0">
+                    {s.status}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <Link
+            href="/suspects"
+            className="w-full py-2.5 rounded-lg bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/30 text-blue-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+          >
+            Open All 5,000 Suspect Profiles →
+          </Link>
+        </div>
+      </div>
+
+      {/* =====================================================================
           LAYER A: OFFICIAL GOVERNMENT STATISTICS (VERIFIED NCRB & RAILWAY POLICE)
           ===================================================================== */}
       <section className="bg-[hsl(222,47%,8%)] border border-emerald-500/30 rounded-2xl p-5 sm:p-6 shadow-xl space-y-6">
@@ -997,100 +1107,6 @@ export default function OverviewPage() {
           </div>
         </section>
       )}
-
-      {/* =====================================================================
-          LAYER B: SYNTHETIC INDIVIDUAL DEMO SANDBOX & GIS CONTEXT
-          ===================================================================== */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <CityCrimeMap />
-        </div>
-
-        {/* Synthetic Demo Sandbox Summary & Sample Preview */}
-        {/* Suspect Registry Summary & Sample Preview */}
-        <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-6 flex flex-col justify-between space-y-6">
-          <div>
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <span className="px-2 py-0.5 rounded bg-blue-500/15 border border-blue-500/30 text-blue-300 text-[10px] font-bold uppercase tracking-wider">
-                Suspect Population
-              </span>
-              <span className="text-xs font-mono text-slate-400">5,000 Profiles</span>
-            </div>
-            <h2 className="text-lg font-bold text-white">
-              Suspect Population Status Distribution
-            </h2>
-            <p className="text-xs text-slate-400 mt-1">
-              Active status breakdown across 5,000 enrolled suspects in Nagpur police jurisdiction.
-            </p>
-
-            <div className="space-y-3 mt-5">
-              {Object.entries(SYNTHETIC_DATASET_SUMMARY.statusBreakdown).map(
-                ([statusLabel, count]) => {
-                  const pct = Math.round((count / SYNTHETIC_DATASET_SUMMARY.totalProfiles) * 100);
-                  const cleanLabel = statusLabel.replace(/\s*\(DEMO\)/gi, '').replace(/_/g, ' ');
-                  return (
-                    <div key={statusLabel} className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-300 font-mono capitalize">{cleanLabel.toLowerCase()}</span>
-                        <span className="text-slate-400 font-mono">
-                          {count} ({pct}%)
-                        </span>
-                      </div>
-                      <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-blue-500/80 rounded-full"
-                          style={{ width: `${pct * 3}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                }
-              )}
-            </div>
-          </div>
-
-          <div className="pt-4 border-t border-[hsl(217,33%,17%)] space-y-3">
-            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-              Recently Enrolled Suspect Records
-            </h3>
-            <div className="space-y-2">
-              {BASE_INDIAN_SUSPECTS.slice(0, 4).map((s) => (
-                <Link
-                  key={s.id}
-                  href={`/suspects/${s.id}`}
-                  className="flex items-center justify-between p-2 rounded-lg bg-slate-900/70 hover:bg-slate-800 border border-slate-800 transition-colors"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <img
-                      src={s.photoUrl}
-                      alt={s.name}
-                      onError={(e) => {
-                        e.currentTarget.src = FALLBACK_PORTRAIT_URL;
-                      }}
-                      className="w-8 h-8 rounded-full object-cover border border-blue-500/40 shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold text-white truncate">{s.name}</p>
-                      <p className="text-[10px] text-blue-400 font-mono truncate">
-                        {s.id} • {s.locality}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 shrink-0">
-                    {s.status}
-                  </span>
-                </Link>
-              ))}
-            </div>
-            <Link
-              href="/suspects"
-              className="w-full py-2 rounded-lg bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/30 text-blue-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
-            >
-              Open All 5,000 Suspect Profiles →
-            </Link>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
