@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "npx tsx scripts/seed.ts"
+    "seed": "npx tsx scripts/seed.ts",
+    "import:data": "npx tsx scripts/import-and-validate-data.ts",
+    "test": "npx tsx scripts/test-data-integrity.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

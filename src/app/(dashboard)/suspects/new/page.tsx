@@ -104,25 +104,31 @@ export default function NewSuspectPage() {
     const calculatedAge = Math.max(18, new Date().getFullYear() - birthYear);
 
     const newSuspect: SuspectRecord = {
-      id: `custom_${Date.now()}`,
-      name: `${firstName.trim()} ${lastName.trim()}`,
-      alias: alias.trim() || '-',
-      threatLevel: (threatLevel as any) || 'HIGH',
-      status: (status as any) || 'ARRESTED',
-      city: city.trim() || 'Nagpur',
-      policeStation: `${city.trim() || 'Sitabuldi'} PS, Nagpur`,
+      id: `SYN-NGP-CUSTOM-${Date.now().toString().slice(-5)}`,
+      name: `${firstName.trim()} ${lastName.trim()} [SYNTHETIC DEMO]`,
+      alias: alias.trim() || 'None (demo record)',
+      threatLevel: (threatLevel as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW') || 'MEDIUM',
+      status: `${status} (DEMO)`,
+      city: 'Nagpur',
+      locality: city.trim() || 'Sitabuldi',
+      policeStation: `DEMO AREA MAPPING — ${city.trim() || 'Sitabuldi'}; not an actual case assignment`,
       cases: 1,
       lastUpdated: new Date().toISOString().split('T')[0],
       gender,
       age: calculatedAge,
       height: `${height} cm`,
       weight: `${weight} kg`,
-      physicalDesc,
-      distinguishingMarks,
-      photoUrl: previewUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300',
+      physicalDesc: physicalDesc || 'Fictional visual description for UI testing; not verified evidence.',
+      distinguishingMarks: distinguishingMarks || 'No distinguishing mark recorded (demo)',
+      photoUrl: previewUrl || '/images/portrait_001.jpg',
+      recordType: 'SYNTHETIC_DEMO_ONLY',
+      isSynthetic: 'TRUE',
+      isRealPerson: 'FALSE',
+      isRealCase: 'FALSE',
+      recordDisclaimer: 'FICTIONAL GENERATED DEMO ONLY — NOT A REAL SUSPECT, FIR, CASE, ARREST, CONVICTION OR CUSTODY RECORD.',
     };
 
-    // Save to unified storage
+    // Save to unified synthetic demo storage
     saveSuspect(newSuspect);
 
     setTimeout(() => {
@@ -145,14 +151,22 @@ export default function NewSuspectPage() {
         className="hidden" 
       />
 
+      {/* Synthetic Demo Provenance Alert */}
+      <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-3 text-xs text-amber-200">
+        <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
+        <span>
+          <strong>SYNTHETIC DEMO — NOT A REAL PERSON OR CASE:</strong> Any profile added here is stored as a labelled fictional demo record and is never added to official government crime totals.
+        </span>
+      </div>
+
       {/* Header */}
       <div className="flex items-center gap-4 border-b border-[hsl(217,33%,17%)] pb-4">
         <Link href="/suspects" className="p-2 bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-lg text-slate-400 hover:text-white transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-white">Register New Suspect Record</h1>
-          <p className="text-sm text-slate-400 mt-1">Add a new criminal profile to database and extract ArcFace 512-dim face vector embeddings</p>
+          <h1 className="text-3xl font-bold text-white">Create Synthetic Demo Profile</h1>
+          <p className="text-sm text-slate-400 mt-1">Add a fictional demonstration profile to test UI workflows (tagged SYNTHETIC_DEMO_ONLY)</p>
         </div>
       </div>
 
@@ -160,8 +174,8 @@ export default function NewSuspectPage() {
         <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl flex items-center gap-3 animate-fade-in">
           <CheckCircle className="w-5 h-5 flex-shrink-0" />
           <div>
-            <p className="font-bold text-base">Suspect Registered & Saved to Database!</p>
-            <p className="text-xs text-emerald-300/90">Assigned ID: SUS-{Date.now().toString().slice(-4)} • ArcFace facial vector indexed. Redirecting to suspects list...</p>
+            <p className="font-bold text-base">Synthetic Demo Profile Created!</p>
+            <p className="text-xs text-emerald-300/90">Tagged as SYNTHETIC DEMO — NOT A REAL PERSON OR CASE. Redirecting to suspects sandbox...</p>
           </div>
         </div>
       )}

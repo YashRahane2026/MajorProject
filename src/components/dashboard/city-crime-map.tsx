@@ -748,14 +748,14 @@ export default function CityCrimeMap() {
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-              <span>Nagpur Police GIS: Crime Hotspots &amp; Trends</span>
+              <span>Nagpur GIS: Locality Demo Overlay &amp; Spatial Context</span>
             </h2>
-            <span className="text-[11px] bg-blue-500/10 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded font-mono font-medium">
-              Metropolitan Road Map
+            <span className="text-[10px] bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded font-mono font-semibold">
+              SYNTHETIC DEMO LOCALITY OVERLAY
             </span>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Real high-resolution city streets, arterial highways, and police stations with live cluster density.
+            Real Nagpur street map with synthetic demo locality clusters (station-level official tables are not publicly published on dashboard.nagpurpolice.in; see verified city-wide NCRB totals above).
           </p>
         </div>
 

@@ -138,7 +138,7 @@ export default function CasesMatchingPage() {
         <div className="flex items-center gap-3">
           <Sparkles className="w-5 h-5 text-indigo-400 flex-shrink-0" />
           <p className="text-xs text-indigo-200">
-            <strong>NLP Case Linking Engine:</strong> Automatically converts unstructured FIR narrative text into 768-dimensional contextual vectors (`all-mpnet-base-v2`) to detect repeat offender groups operating across multiple police station jurisdictions.
+            <strong>NLP Case Linking Sandbox (SYNTHETIC DEMO — NOT REAL FIRS OR CASES):</strong> Demonstrates how Sentence-BERT (`all-mpnet-base-v2`, 768-D vectors) computes semantic cosine similarity across synthetic Modus Operandi narratives. All FIRs shown below are fictional test records.
           </p>
         </div>
       </div>

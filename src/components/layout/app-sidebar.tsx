@@ -16,7 +16,9 @@ import {
   ScrollText, 
   Settings,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Database,
+  Microscope
 } from 'lucide-react';
 
 interface AppSidebarProps {
@@ -39,9 +41,9 @@ export default function AppSidebar({
       title: 'MAIN',
       items: [
         { label: 'Overview', href: '/overview', icon: LayoutDashboard },
-        { label: 'Suspects', href: '/suspects', icon: Users },
-        { label: 'Cases', href: '/cases', icon: Briefcase },
-        { label: 'FIRs', href: '/firs', icon: FileText },
+        { label: 'Suspects (Demo)', href: '/suspects', icon: Users },
+        { label: 'Cases (Demo)', href: '/cases', icon: Briefcase },
+        { label: 'FIRs (Demo)', href: '/firs', icon: FileText },
       ]
     },
     {
@@ -49,12 +51,14 @@ export default function AppSidebar({
       items: [
         { label: 'Face Matching', href: '/matching/face', icon: ScanFace },
         { label: 'Case Linking', href: '/matching/cases', icon: LinkIcon },
-        { label: 'Analytics', href: '/analytics', icon: BarChart3 },
+        { label: 'Analytics & Stats', href: '/analytics', icon: BarChart3 },
+        { label: 'Evaluation & Limits', href: '/analytics/evaluation', icon: Microscope },
       ]
     },
     {
-      title: 'SYSTEM',
+      title: 'PROVENANCE & SYSTEM',
       items: [
+        { label: 'Data Sources', href: '/data-sources', icon: Database },
         { label: 'Audit Log', href: '/audit', icon: ScrollText },
         { label: 'Settings', href: '/settings', icon: Settings },
       ]

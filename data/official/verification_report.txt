@@ -1,0 +1,13 @@
+CrimeTrack AI Nagpur dataset verification
+Created on: 2026-10-13
+Synthetic profiles: 5000
+Profile columns: 35
+Blank profile cells: 0
+AI-generated portrait files: 32
+Profiles with demo aliases: 189
+Nagpur City sourced aggregate-stat rows: 24
+Nagpur Railway Police official dashboard rows: 15
+2025 Railway Police category registrations sum: 1359 (expected 1359)
+2025 Railway Police category detections sum: 258 (expected 258)
+Important: generated profile records are fictional and are NOT linked to official crime counts.
+Important: city stats CSV is a sourced subset, not the full underlying NCRB table export.

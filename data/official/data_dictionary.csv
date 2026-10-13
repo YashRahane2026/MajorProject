@@ -1,0 +1,14 @@
+﻿field_or_file,meaning,caveat
+id,Synthetic unique profile ID.,Never a real police ID.
+name,Generated Indian-style display name with visible synthetic-demo suffix.,Do not remove demo marker in demo UI.
+alias,Alias generated for only 4% of profiles; others say Not recorded (demo).,All values filled.
+threatLevel,Random UI tag.,Not a valid risk score and must not be used for real-world decisions.
+status,Random demo workflow status.,Not actual arrest/custody/court status.
+city / district / stateOrUT,Broad demo geography.,"All profiles set to Nagpur, Maharashtra."
+locality,A real locality name used for plausible UI context.,No real incident is asserted there.
+policeStation,Labelled demo mapping based on the locality.,Not a real police station assignment.
+cases,Random demo case count.,Not a registered-case count.
+photoUrl,Relative path to one of 32 AI-generated fictional portrait images.,Portraits are not real people and are not evidence.
+crimeCategory,Illustrative synthetic category.,Not linked to any real case or individual.
+isSynthetic / isRealPerson / isRealCase,Provenance flags.,TRUE / FALSE values are text-safe for CSV import.
+official stats CSVs,Published aggregate count tables with source URLs and scope.,Do not merge aggregate statistics onto individual synthetic profiles.

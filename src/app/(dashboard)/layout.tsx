@@ -12,10 +12,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     // Read from localStorage on mount
-    const role = localStorage.getItem('demo_role');
-    const name = localStorage.getItem('demo_user');
-    if (role) setUserRole(role);
-    if (name) setUserName(name);
+    const syncRoleFromStorage = () => {
+      const role = localStorage.getItem('demo_role');
+      const name = localStorage.getItem('demo_user');
+      if (role) setUserRole(role);
+      if (name) setUserName(name);
+    };
+    syncRoleFromStorage();
 
     // Auto-collapse sidebar on smaller screens
     const handleResize = () => {
@@ -30,7 +33,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     handleResize();
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('crimetrack-role-change', syncRoleFromStorage);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('crimetrack-role-change', syncRoleFromStorage);
+    };
   }, []);
 
   return (
@@ -44,6 +51,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         />
         
         <div className="flex flex-col flex-1 overflow-hidden min-w-0">
+          <SyntheticBanner />
           <TopBar 
             userName={userName}
             userRole={userRole}

@@ -1,34 +1,46 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  X, 
-  Database, 
-  Download, 
-  Sliders, 
-  Layers, 
-  Sparkles, 
-  CheckCircle2, 
-  ShieldAlert, 
+import Link from 'next/link';
+import {
+  X,
+  Database,
+  Download,
+  CheckCircle2,
+  AlertTriangle,
+  ExternalLink,
   Image as ImageIcon,
-  MapPin,
-  FileSpreadsheet
 } from 'lucide-react';
-import { BASE_INDIAN_SUSPECTS, getAllSuspects } from '@/lib/data/suspects-data';
-import { cn } from '@/lib/utils';
+import {
+  BASE_INDIAN_SUSPECTS,
+  SYNTHETIC_DATASET_SUMMARY,
+  FALLBACK_PORTRAIT_URL,
+  normalizePhotoUrl,
+} from '@/lib/data/suspects-data';
 
-export default function DatasetInspectorModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export default function DatasetInspectorModal({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
   const [selectedSuspectIndex, setSelectedSuspectIndex] = useState(0);
-  const allSuspects = getAllSuspects();
-  const currentSuspect = allSuspects[selectedSuspectIndex] || BASE_INDIAN_SUSPECTS[0];
+  const currentSuspect =
+    BASE_INDIAN_SUSPECTS[selectedSuspectIndex] || BASE_INDIAN_SUSPECTS[0];
 
   if (!isOpen) return null;
 
-  const handleDownloadDataset = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allSuspects, null, 2));
+  const handleDownloadPreviewJson = () => {
+    const dataStr =
+      'data:text/json;charset=utf-8,' +
+      encodeURIComponent(JSON.stringify(BASE_INDIAN_SUSPECTS, null, 2));
     const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", "crimetrack_nagpur_suspects_dataset.json");
+    downloadAnchor.setAttribute('href', dataStr);
+    downloadAnchor.setAttribute(
+      'download',
+      'synthetic_nagpur_suspects_preview_25.json'
+    );
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
@@ -36,34 +48,33 @@ export default function DatasetInspectorModal({ isOpen, onClose }: { isOpen: boo
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 md:p-6 overflow-y-auto">
-      <div className="bg-[hsl(222,47%,8%)] border border-purple-500/30 rounded-2xl max-w-5xl w-full shadow-2xl overflow-hidden flex flex-col my-auto animate-fade-in border-t-2 border-t-purple-500 max-h-[90vh]">
+      <div className="bg-[hsl(222,47%,8%)] border border-amber-500/30 rounded-2xl max-w-5xl w-full shadow-2xl overflow-hidden flex flex-col my-auto animate-fade-in border-t-2 border-t-amber-500 max-h-[90vh]">
         {/* Header */}
         <div className="p-5 border-b border-[hsl(217,33%,17%)] flex justify-between items-center bg-slate-900/70">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-purple-500/10 rounded-xl border border-purple-500/20 text-purple-400">
+            <div className="p-2.5 bg-amber-500/10 rounded-xl border border-amber-500/20 text-amber-400">
               <Database className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                Indian Suspect Dataset &amp; Augmentation Inspector
-                <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded font-mono border border-purple-500/30">
-                  Nagpur Jurisdiction Corpus
+              <h2 className="text-lg font-bold text-white flex flex-wrap items-center gap-2">
+                Dataset &amp; Provenance Inspector
+                <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono border border-amber-500/30">
+                  SYNTHETIC DEMO — NOT A REAL PERSON OR CASE
                 </span>
               </h2>
               <p className="text-xs text-slate-400">
-                Transparent presentation dataset: 1,250 augmented records derived from authentic regional Indian demographics.
+                5,000 synthetic fictional Nagpur demo profiles (`synthetic_nagpur_suspects_5000.csv`) + 32 AI-generated portrait assets.
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={handleDownloadDataset}
-              className="bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-md shadow-purple-500/20 transition-all"
-              title="Download JSON dataset for offline analysis & verification"
+              onClick={handleDownloadPreviewJson}
+              className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all"
             >
-              <Download className="w-3.5 h-3.5" /> Export JSON
+              <Download className="w-3.5 h-3.5" /> Export 25 Preview JSON
             </button>
-            <button 
+            <button
               onClick={onClose}
               className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
             >
@@ -73,174 +84,160 @@ export default function DatasetInspectorModal({ isOpen, onClose }: { isOpen: boo
         </div>
 
         <div className="p-6 space-y-6 overflow-y-auto flex-1">
-          {/* Dataset Statistics Cards */}
+          {/* Verification Statistics Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
-              <span className="text-slate-400">Total Records</span>
-              <p className="text-xl font-mono font-bold text-white mt-1">1,250</p>
-              <span className="text-[10px] text-purple-400">Synthetic Indian Corpus</span>
+              <span className="text-slate-400">Synthetic Profiles</span>
+              <p className="text-xl font-mono font-bold text-white mt-1">
+                {SYNTHETIC_DATASET_SUMMARY.totalProfiles.toLocaleString()}
+              </p>
+              <span className="text-[10px] text-amber-400">
+                35 Columns • 0 Blank Cells
+              </span>
             </div>
             <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
-              <span className="text-slate-400">Base Identities</span>
-              <p className="text-xl font-mono font-bold text-white mt-1">{allSuspects.length}</p>
-              <span className="text-[10px] text-blue-400">Nagpur Police Stations</span>
+              <span className="text-slate-400">Portrait Assets</span>
+              <p className="text-xl font-mono font-bold text-white mt-1">
+                {SYNTHETIC_DATASET_SUMMARY.portraitCount} Files
+              </p>
+              <span className="text-[10px] text-blue-400">
+                /images/portrait_001..032.jpg
+              </span>
             </div>
             <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
-              <span className="text-slate-400">Augmentation Rate</span>
-              <p className="text-xl font-mono font-bold text-white mt-1">5× Multiplier</p>
-              <span className="text-[10px] text-emerald-400">Surveillance Robustness</span>
+              <span className="text-slate-400">Nagpur City Stats</span>
+              <p className="text-xl font-mono font-bold text-emerald-400 mt-1">
+                24 Rows
+              </p>
+              <span className="text-[10px] text-emerald-400">
+                Official NCRB (2020–2023)
+              </span>
             </div>
             <div className="p-3 bg-slate-900/60 rounded-xl border border-slate-800">
-              <span className="text-slate-400">Vector Embedding</span>
-              <p className="text-xl font-mono font-bold text-white mt-1">512-dim</p>
-              <span className="text-[10px] text-amber-400">ArcFace Continuous</span>
+              <span className="text-slate-400">Railway Police Stats</span>
+              <p className="text-xl font-mono font-bold text-emerald-400 mt-1">
+                15 Rows
+              </p>
+              <span className="text-[10px] text-emerald-400">
+                Official Dashboard (2023–2025)
+              </span>
             </div>
           </div>
 
-          {/* Live Data Augmentation Demonstration Card */}
-          <div className="p-5 bg-slate-900/90 border border-slate-800 rounded-2xl space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2">
-              <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-purple-400" />
-                  Live Synthetic Augmentation Pipeline (Surveillance Simulation)
-                </h3>
-                <p className="text-xs text-slate-400">
-                  Select a suspect below to inspect how data augmentations simulate low-light CCTV, angular tilt, and blur:
-                </p>
-              </div>
+          {/* 32 Verified Portrait Gallery */}
+          <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <ImageIcon className="w-4 h-4 text-blue-400" />
+                32 Verified AI-Generated Portrait Assets (`/public/images/portrait_001.jpg` – `portrait_032.jpg`)
+              </h3>
+              <span className="text-[10px] text-amber-300 font-mono">
+                UI Assets Only — Not Real Mugshots
+              </span>
+            </div>
+            <div className="grid grid-cols-8 sm:grid-cols-16 gap-2">
+              {Array.from({ length: 32 }, (_, idx) => {
+                const num = String(idx + 1).padStart(3, '0');
+                const src = `/images/portrait_${num}.jpg`;
+                return (
+                  <div
+                    key={src}
+                    className="flex flex-col items-center gap-1"
+                    title={`portrait_${num}.jpg (AI-generated fictional portrait)`}
+                  >
+                    <img
+                      src={src}
+                      alt={`Synthetic portrait ${num}`}
+                      onError={(e) => {
+                        e.currentTarget.src = FALLBACK_PORTRAIT_URL;
+                      }}
+                      className="w-10 h-10 rounded-lg object-cover border border-slate-700"
+                    />
+                    <span className="text-[9px] font-mono text-slate-400">{num}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Sample Record Inspector */}
+          <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                Inspect Sample Synthetic Profile Schema (35 Populated Fields)
+              </h3>
               <select
                 value={selectedSuspectIndex}
-                onChange={(e) => setSelectedSuspectIndex(parseInt(e.target.value))}
-                className="bg-slate-950 border border-slate-700 text-xs text-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-purple-500"
+                onChange={(e) => setSelectedSuspectIndex(Number(e.target.value))}
+                className="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white"
               >
-                {allSuspects.map((s, idx) => (
-                  <option key={s.id} value={idx}>{s.name} ({s.city})</option>
+                {BASE_INDIAN_SUSPECTS.map((s, idx) => (
+                  <option key={s.id} value={idx}>
+                    {s.id} — {s.name}
+                  </option>
                 ))}
               </select>
             </div>
 
-            {/* 4 Variant Augmentation Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
-              {/* 1. Base Frontal Mugshot */}
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center space-y-2">
-                <div className="w-24 h-24 mx-auto rounded-xl overflow-hidden border-2 border-emerald-500/50 relative shadow-md">
-                  <img src={currentSuspect.photoUrl} alt="Base" className="w-full h-full object-cover" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
-                    1. Base Frontal
-                  </span>
-                  <p className="text-[11px] text-slate-400 mt-1">Standard 112×112 Crop</p>
-                </div>
-              </div>
-
-              {/* 2. Low-Light Surveillance */}
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center space-y-2">
-                <div className="w-24 h-24 mx-auto rounded-xl overflow-hidden border-2 border-blue-500/50 relative shadow-md">
-                  <img 
-                    src={currentSuspect.photoUrl} 
-                    alt="Low-light" 
-                    className="w-full h-full object-cover brightness-75 contrast-125" 
-                  />
-                </div>
-                <div>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-bold">
-                    2. Night Surveillance
-                  </span>
-                  <p className="text-[11px] text-slate-400 mt-1">Brightness -25% • High Contrast</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start text-xs">
+              <div className="flex items-center gap-3 p-3 bg-slate-950/70 rounded-xl border border-slate-800">
+                <img
+                  src={normalizePhotoUrl(currentSuspect.photoUrl)}
+                  alt={currentSuspect.name}
+                  onError={(e) => {
+                    e.currentTarget.src = FALLBACK_PORTRAIT_URL;
+                  }}
+                  className="w-16 h-16 rounded-full object-cover border-2 border-amber-500/40 shrink-0"
+                />
+                <div className="min-w-0">
+                  <p className="font-bold text-white truncate">{currentSuspect.name}</p>
+                  <p className="text-[11px] text-amber-400 font-mono">{currentSuspect.id}</p>
+                  <p className="text-[11px] text-slate-400">
+                    {currentSuspect.locality}, {currentSuspect.city}
+                  </p>
                 </div>
               </div>
 
-              {/* 3. CCTV Grain & Blur */}
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center space-y-2">
-                <div className="w-24 h-24 mx-auto rounded-xl overflow-hidden border-2 border-amber-500/50 relative shadow-md">
-                  <img 
-                    src={currentSuspect.photoUrl} 
-                    alt="CCTV Blur" 
-                    className="w-full h-full object-cover blur-[0.6px] saturate-150" 
-                  />
+              <div className="md:col-span-2 p-3 bg-slate-950/70 rounded-xl border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300">
+                <div>
+                  <span className="text-slate-500">alias:</span> {currentSuspect.alias}
                 </div>
                 <div>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold">
-                    3. CCTV Noise Artifact
-                  </span>
-                  <p className="text-[11px] text-slate-400 mt-1">Gaussian Blur • Color Dither</p>
-                </div>
-              </div>
-
-              {/* 4. Horizontal Mirror / Angle Shift */}
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center space-y-2">
-                <div className="w-24 h-24 mx-auto rounded-xl overflow-hidden border-2 border-purple-500/50 relative shadow-md">
-                  <img 
-                    src={currentSuspect.photoUrl} 
-                    alt="Flipped" 
-                    className="w-full h-full object-cover scale-x-[-1]" 
-                  />
+                  <span className="text-slate-500">status:</span> {currentSuspect.status}
                 </div>
                 <div>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20 font-bold">
-                    4. Horizontal Flip
-                  </span>
-                  <p className="text-[11px] text-slate-400 mt-1">Mirror Invariance Testing</p>
+                  <span className="text-slate-500">crimeCategory:</span>{' '}
+                  {currentSuspect.crimeCategory}
+                </div>
+                <div>
+                  <span className="text-slate-500">recordType:</span>{' '}
+                  <span className="text-amber-300">{currentSuspect.recordType}</span> •{' '}
+                  <span className="text-slate-500">isSynthetic:</span>{' '}
+                  <span className="text-emerald-400">{String(currentSuspect.isSynthetic)}</span> •{' '}
+                  <span className="text-slate-500">isRealPerson:</span>{' '}
+                  <span className="text-red-400">{String(currentSuspect.isRealPerson)}</span>
+                </div>
+                <div className="text-amber-300/90 pt-1">
+                  {currentSuspect.recordDisclaimer}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Dataset Table */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
-            <div className="p-3 bg-slate-950/80 border-b border-slate-800 flex justify-between items-center text-xs">
-              <span className="font-semibold text-white">Nagpur Criminal Registry Corpus Sample</span>
-              <span className="text-slate-500 font-mono">Showing {allSuspects.length} Active Records</span>
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800 text-xs">
+            <div className="flex items-center gap-2 text-emerald-400">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>
+                Official statistics and synthetic individual profiles are strictly separated.
+              </span>
             </div>
-            <div className="max-h-60 overflow-y-auto text-xs">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] sticky top-0 font-mono">
-                  <tr>
-                    <th className="p-2.5">Suspect</th>
-                    <th className="p-2.5">Police Station</th>
-                    <th className="p-2.5">Risk Level</th>
-                    <th className="p-2.5">Physical Marks</th>
-                    <th className="p-2.5 text-center">Cases</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800 text-slate-300">
-                  {allSuspects.map((s) => (
-                    <tr key={s.id} className="hover:bg-slate-800/40">
-                      <td className="p-2.5 flex items-center gap-2">
-                        <img src={s.photoUrl} alt={s.name} className="w-6 h-6 rounded-full object-cover border border-slate-700" />
-                        <div>
-                          <p className="font-bold text-white text-xs">{s.name}</p>
-                          <p className="text-[10px] text-slate-500 font-mono">aka {s.alias}</p>
-                        </div>
-                      </td>
-                      <td className="p-2.5 text-slate-400 text-xs">
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3 text-purple-400" /> {s.policeStation || 'Nagpur PS'}
-                        </span>
-                      </td>
-                      <td className="p-2.5">
-                        <span className={cn(
-                          "px-2 py-0.5 rounded text-[10px] font-bold",
-                          s.threatLevel === 'CRITICAL' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
-                          s.threatLevel === 'HIGH' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
-                          'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                        )}>
-                          {s.threatLevel}
-                        </span>
-                      </td>
-                      <td className="p-2.5 text-[11px] text-slate-400 max-w-xs truncate">
-                        {s.distinguishingMarks || 'Registered profile'}
-                      </td>
-                      <td className="p-2.5 text-center font-mono font-bold text-slate-300">
-                        {s.cases}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <Link
+              href="/data-sources"
+              onClick={onClose}
+              className="text-blue-400 hover:underline font-semibold flex items-center gap-1"
+            >
+              Open Full Data Sources &amp; Provenance Page <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
       </div>

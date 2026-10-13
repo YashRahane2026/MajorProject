@@ -2,393 +2,484 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { 
-  ArrowLeft, 
-  Edit, 
-  MapPin, 
-  Calendar, 
-  Fingerprint, 
-  Activity, 
-  Clock, 
-  ShieldAlert, 
-  CheckCircle2, 
-  User, 
-  Camera, 
-  History, 
-  Building, 
+import {
+  ArrowLeft,
+  Edit,
+  MapPin,
+  Calendar,
+  Activity,
+  Clock,
+  User,
+  Building,
   AlertTriangle,
   GitCommit,
-  Link2,
-  FileText,
-  Layers,
-  Zap,
   Check,
   X,
-  Plus,
-  Trash2
+  Trash2,
+  ShieldAlert,
+  Info,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { getSuspectById, saveSuspect, removeSuspect, SuspectRecord } from '@/lib/data/suspects-data';
+import {
+  getSuspectById,
+  saveSuspect,
+  removeSuspect,
+  SuspectRecord,
+  FALLBACK_PORTRAIT_URL,
+  normalizePhotoUrl,
+} from '@/lib/data/suspects-data';
 
-export default function SuspectDetailPage({ params }: { params: { id: string } }) {
+export default function SuspectDetailPage() {
   const router = useRouter();
+  const params = useParams();
+  const rawId = String(params?.id || 'SYN-NGP-00001');
 
-  const [suspectStatus, setSuspectStatus] = useState('ARRESTED');
+  const [record, setRecord] = useState<SuspectRecord | null>(null);
+  const [loading, setLoading] = useState(true);
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showLinkCaseModal, setShowLinkCaseModal] = useState(false);
 
-  // Profile Form State
+  // Editable Demo State
+  const [suspectStatus, setSuspectStatus] = useState('UNDER_INVESTIGATION (DEMO)');
   const [suspectName, setSuspectName] = useState('');
-  const [suspectAlias, setSuspectAlias] = useState('');
-  const [threatLevel, setThreatLevel] = useState<'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('HIGH');
+  const [suspectAlias, setSuspectAlias] = useState('Not recorded (demo)');
+  const [threatLevel, setThreatLevel] = useState<'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('MEDIUM');
   const [physicalDesc, setPhysicalDesc] = useState('');
   const [distinguishingMarks, setDistinguishingMarks] = useState('');
-  const [suspectCity, setSuspectCity] = useState('Nagpur');
-  const [policeStation, setPoliceStation] = useState('Sitabuldi PS, Nagpur');
+  const [locality, setLocality] = useState('Sitabuldi');
+  const [policeStation, setPoliceStation] = useState('');
   const [gender, setGender] = useState('Male');
-  const [age, setAge] = useState(32);
-  const [height, setHeight] = useState('175 cm');
-  const [weight, setWeight] = useState('75 kg');
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [age, setAge] = useState(30);
+  const [height, setHeight] = useState('170 cm');
+  const [weight, setWeight] = useState('70 kg');
+  const [photoUrl, setPhotoUrl] = useState<string>(FALLBACK_PORTRAIT_URL);
 
-  // Link Case State
-  const [selectedCaseToLink, setSelectedCaseToLink] = useState('CR/2026/9001');
+  // Demo Workflow Status Modal State
+  const [newStatus, setNewStatus] = useState('IN_REMAND (DEMO)');
+  const [demoNote, setDemoNote] = useState('UI workflow simulation event (not a real order)');
 
-  // Linked Cases List State
-  const [linkedCases, setLinkedCases] = useState([
-    { id: 'CR/2026/5001', title: 'Armed Robbery at Sitabuldi Jewelry Store', type: 'ROBBERY', status: 'UNDER_INVESTIGATION', date: '2026-08-10', role: 'PRIMARY_SUSPECT' },
-    { id: 'CR/2025/4412', title: 'Highway Narcotics Seizure Syndicate', type: 'NARCOTICS', status: 'CHARGE_SHEETED', date: '2025-11-05', role: 'ACCOMPLICE' },
-    { id: 'CR/2024/2009', title: 'Cyber Fraud Phishing Operations', type: 'CYBER_FRAUD', status: 'TRIAL', date: '2024-05-22', role: 'PRIMARY_SUSPECT' },
-  ]);
+  const [timelineEvents, setTimelineEvents] = useState<
+    Array<{ status: string; date: string; location: string; order: string; current: boolean }>
+  >([]);
 
-  // Timeline events state
-  const [newStatus, setNewStatus] = useState('IN_REMAND');
-  const [courtName, setCourtName] = useState('District & Sessions Court, Nagpur');
-  const [orderNo, setOrderNo] = useState('ORD-2026-9941');
-
-  const [timelineEvents, setTimelineEvents] = useState([
-    { status: 'Remand Extended (7 Days)', date: '2026-08-18', location: 'District Court, Nagpur', order: 'ORD-2026-9941', current: true },
-    { status: 'Arrested at Railway Station', date: '2026-08-15', location: 'Sitabuldi PS, Nagpur', order: 'FIR-2026-104', current: false },
-    { status: 'ArcFace Alias Matched (98.2%)', date: '2026-08-10', location: 'Nagpur Cyber Cell Database', order: 'BIO-SCAN-09', current: false },
-    { status: 'Bail Revoked', date: '2025-11-12', location: 'Sessions Court, Nagpur', order: 'ORD-2025-4412', current: false },
-  ]);
-
-  // DYNAMIC DATA LOADING BASED ON params.id
   useEffect(() => {
-    const record = getSuspectById(params.id);
-    if (record) {
-      setSuspectName(record.name);
-      setSuspectAlias(record.alias || '-');
-      setThreatLevel(record.threatLevel || 'HIGH');
-      setSuspectStatus(record.status || 'ARRESTED');
-      setSuspectCity(record.city || 'Nagpur');
-      setPoliceStation(record.policeStation || 'Sitabuldi PS, Nagpur');
-      setPhysicalDesc(record.physicalDesc || 'Registered criminal suspect profile.');
-      setDistinguishingMarks(record.distinguishingMarks || 'Scar/tattoo mark registered in database.');
-      setPhotoUrl(record.photoUrl || null);
-      setGender(record.gender || 'Male');
-      setAge(record.age || 32);
-      setHeight(record.height || '175 cm');
-      setWeight(record.weight || '75 kg');
-    } else {
-      // Fallback for custom or direct route IDs
-      setSuspectName(`Suspect #${params.id}`);
-      setSuspectAlias('Registered Alias');
-      setThreatLevel('HIGH');
-      setSuspectStatus('ARRESTED');
-      setSuspectCity('Nagpur');
-      setPoliceStation('Sitabuldi PS, Nagpur');
-      setPhysicalDesc('Active suspect record in Nagpur police database.');
-      setDistinguishingMarks('Physical traits registered in CCTNS.');
-      setPhotoUrl(null);
-    }
-  }, [params.id]);
+    let active = true;
+    async function loadProfile() {
+      setLoading(true);
+      // 1. Check custom/local first
+      const localMatch = getSuspectById(rawId);
 
-  const handleDeleteRecord = () => {
-    if (confirm(`Are you sure you want to permanently delete suspect record: "${suspectName}"?`)) {
-      removeSuspect(params.id);
-      router.push('/suspects');
+      try {
+        const res = await fetch(`/api/suspects/${encodeURIComponent(rawId)}`);
+        if (res.ok) {
+          const json = await res.json();
+          const p: SuspectRecord = localMatch || json.data;
+          if (active && p) {
+            applyProfileToState(p);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch {
+        // Fallback to local
+      }
+
+      if (active) {
+        if (localMatch) {
+          applyProfileToState(localMatch);
+        }
+        setLoading(false);
+      }
     }
+
+    function applyProfileToState(p: SuspectRecord) {
+      setRecord(p);
+      setSuspectName(p.name);
+      setSuspectAlias(p.alias || 'Not recorded (demo)');
+      setSuspectStatus(p.status || 'UNDER_INVESTIGATION (DEMO)');
+      setThreatLevel(p.threatLevel || 'MEDIUM');
+      setPhysicalDesc(p.physicalDesc || 'Fictional visual description for UI testing.');
+      setDistinguishingMarks(p.distinguishingMarks || 'No distinguishing mark recorded (demo)');
+      setLocality(p.locality || p.city || 'Nagpur');
+      setPoliceStation(
+        p.policeStation ||
+          `DEMO AREA MAPPING — ${p.locality || 'Nagpur'}; not an actual case assignment`
+      );
+      setGender(p.gender || 'Male');
+      setAge(p.age || 30);
+      setHeight(p.height || '170 cm');
+      setWeight(p.weight || '70 kg');
+      setPhotoUrl(normalizePhotoUrl(p.photoUrl));
+
+      setTimelineEvents([
+        {
+          status: `${p.status} [Synthetic Workflow State]`,
+          date: p.lastUpdated || '2026-10-13',
+          location: `DEMO AREA — ${p.locality || 'Nagpur'} (Not a real station/court)`,
+          order: p.caseReferenceDemo || `DEMO-NGP-2026-${p.id}`,
+          current: true,
+        },
+        {
+          status: 'Synthetic Demo Record Generated for UI Testing',
+          date: '2026-10-13',
+          location: 'CrimeTrack AI Synthetic Sandbox',
+          order: 'SYNTHETIC_DEMO_ONLY',
+          current: false,
+        },
+      ]);
+    }
+
+    loadProfile();
+    return () => {
+      active = false;
+    };
+  }, [rawId]);
+
+  const persistUpdate = (overrides: Partial<SuspectRecord> = {}) => {
+    if (!record) return;
+    const updated: SuspectRecord = {
+      ...record,
+      name: suspectName,
+      alias: suspectAlias || 'Not recorded (demo)',
+      threatLevel,
+      status: suspectStatus,
+      locality,
+      policeStation,
+      gender,
+      age: Number(age) || 30,
+      height,
+      weight,
+      physicalDesc,
+      distinguishingMarks,
+      photoUrl,
+      lastUpdated: new Date().toISOString().split('T')[0],
+      ...overrides,
+    };
+    saveSuspect(updated);
+    setRecord(updated);
   };
 
-  const handleUpdateStatus = () => {
+  const handleUpdateStatus = (e: React.FormEvent) => {
+    e.preventDefault();
     setSuspectStatus(newStatus);
-    const existing = getSuspectById(params.id);
-    if (existing) {
-      saveSuspect({
-        ...existing,
-        status: newStatus as any,
-        lastUpdated: new Date().toISOString().split('T')[0]
-      });
-    }
+    persistUpdate({ status: newStatus });
 
+    const newEvent = {
+      status: `${newStatus} [Demo Simulation]`,
+      date: new Date().toISOString().split('T')[0],
+      location: `Simulated Workflow (${locality})`,
+      order: demoNote || 'DEMO-WORKFLOW-STEP',
+      current: true,
+    };
     setTimelineEvents([
-      { 
-        status: `Transferred to ${newStatus.replace('_', ' ')}`, 
-        date: new Date().toISOString().split('T')[0], 
-        location: courtName, 
-        order: orderNo, 
-        current: true 
-      },
-      ...timelineEvents.map(e => ({ ...e, current: false }))
+      newEvent,
+      ...timelineEvents.map((ev) => ({ ...ev, current: false })),
     ]);
     setShowStatusModal(false);
   };
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    const existing = getSuspectById(params.id);
-    const updatedRecord: SuspectRecord = {
-      id: params.id,
-      name: suspectName,
-      alias: suspectAlias,
-      threatLevel,
-      status: suspectStatus as any,
-      city: suspectCity,
-      policeStation: policeStation || `${suspectCity} PS, Nagpur`,
-      cases: existing ? existing.cases : 1,
-      lastUpdated: new Date().toISOString().split('T')[0],
-      gender,
-      age,
-      height,
-      weight,
-      physicalDesc,
-      distinguishingMarks,
-      photoUrl: photoUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300'
-    };
-
-    saveSuspect(updatedRecord);
+    persistUpdate();
     setShowEditModal(false);
   };
 
-  const handleLinkCase = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newLink = {
-      id: selectedCaseToLink,
-      title: 'Commercial Burglary & Strongroom Break-in',
-      type: 'BURGLARY',
-      status: 'UNDER_INVESTIGATION',
-      date: new Date().toISOString().split('T')[0],
-      role: 'PRIMARY_SUSPECT'
-    };
-    setLinkedCases([newLink, ...linkedCases]);
-    setShowLinkCaseModal(false);
+  const handleDeleteRecord = () => {
+    if (confirm(`Remove custom modifications for demo record "${suspectName}"?`)) {
+      removeSuspect(record?.id || rawId);
+      router.push('/suspects');
+    }
   };
 
-  const getInitials = (name: string) => (name || 'Suspect').split(' ').map(n => n[0]).join('').substring(0, 2);
+  if (loading) {
+    return (
+      <div className="p-12 text-center text-slate-400">
+        Loading synthetic demo profile {rawId}...
+      </div>
+    );
+  }
 
-  const ThreatBadge = ({ level }: { level: string }) => {
-    const colors: Record<string, string> = {
-      'CRITICAL': 'bg-red-500/15 text-red-400 border-red-500/30',
-      'HIGH': 'bg-orange-500/15 text-orange-400 border-orange-500/30',
-      'MEDIUM': 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-      'LOW': 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-    };
-    return <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border flex items-center gap-1.5 ${colors[level] || colors.LOW}`}><ShieldAlert className="w-3.5 h-3.5"/> {level} RISK</span>;
-  };
-
-  const StatusBadge = ({ status }: { status: string }) => {
-    const colors: Record<string, string> = {
-      'ARRESTED': 'bg-red-500/15 text-red-400 border-red-500/30',
-      'IN_REMAND': 'bg-purple-500/15 text-purple-400 border-purple-500/30',
-      'REMAND': 'bg-purple-500/15 text-purple-400 border-purple-500/30',
-      'BAILED': 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-      'BAIL': 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-      'TRIAL': 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30',
-      'CONVICTED': 'bg-rose-600/15 text-rose-400 border-rose-500/30',
-      'CUSTODY': 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30',
-      'RELEASED': 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-      'AT_LARGE': 'bg-red-500/15 text-red-400 border-red-500/30',
-    };
-    const label = (status || 'ARRESTED').replace('_', ' ');
-    return <span className={`px-2.5 py-1 rounded-md text-xs font-semibold border ${colors[status] || colors.ARRESTED}`}>{label}</span>;
-  };
+  if (!record) {
+    return (
+      <div className="p-12 text-center space-y-4">
+        <p className="text-lg font-bold text-white">
+          Synthetic Demo Profile &ldquo;{rawId}&rdquo; Not Found
+        </p>
+        <Link
+          href="/suspects"
+          className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold"
+        >
+          Back to 5,000 Demo Profiles
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[hsl(217,33%,17%)] pb-6">
-        <div className="flex items-center gap-4">
-          <Link href="/suspects" className="p-2.5 bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl text-slate-400 hover:text-white transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
+      {/* Unmistakable Synthetic Provenance Banner */}
+      <div className="p-4 bg-amber-500/15 border-2 border-amber-500/40 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="w-6 h-6 text-amber-400 shrink-0 mt-0.5" />
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-white tracking-tight">{suspectName || 'Loading Suspect...'}</h1>
-              <StatusBadge status={suspectStatus} />
-              <ThreatBadge level={threatLevel} />
-            </div>
-            <p className="text-sm text-slate-400 mt-1 flex items-center gap-2">
-              <span>System ID: SUS-{params.id}</span>
-              <span>•</span>
-              <span className="text-blue-400 font-medium">Aliases: {suspectAlias}</span>
-              <span>•</span>
-              <span className="text-slate-400">{policeStation}</span>
+            <span className="inline-block px-2.5 py-0.5 rounded bg-amber-500 text-slate-950 text-xs font-extrabold uppercase tracking-wider">
+              SYNTHETIC DEMO — NOT A REAL PERSON OR CASE
+            </span>
+            <p className="text-xs text-amber-100 mt-1 font-medium">
+              {record.recordDisclaimer ||
+                'FICTIONAL GENERATED DEMO ONLY — NOT A REAL SUSPECT, FIR, CASE, ARREST, CONVICTION OR CUSTODY RECORD.'}
             </p>
           </div>
         </div>
-        
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => setShowEditModal(true)}
-            className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] hover:bg-slate-800 text-white px-3.5 py-2.5 rounded-xl flex items-center gap-2 text-sm font-semibold transition-all"
-          >
-            <Edit className="w-4 h-4 text-blue-400" />
-            Edit Profile
-          </button>
-          <button 
-            onClick={() => setShowStatusModal(true)}
-            className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl flex items-center gap-2 text-sm font-semibold transition-all shadow-lg shadow-blue-500/20"
-          >
-            <GitCommit className="w-4 h-4" />
-            Update Lifecycle Status
-          </button>
-          <button 
-            onClick={handleDeleteRecord}
-            className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 px-3 py-2.5 rounded-xl flex items-center gap-2 text-sm font-semibold transition-all"
-            title="Delete Suspect Record"
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete
-          </button>
-        </div>
+        <span className="text-xs font-mono text-amber-300 bg-slate-950/70 px-3 py-1.5 rounded-lg border border-amber-500/30 shrink-0">
+          isSynthetic: TRUE • isRealPerson: FALSE
+        </span>
       </div>
 
-      {/* Cross-Jurisdiction Repeat Offender Alert */}
-      <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-purple-300">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-500/20 rounded-lg">
-            <Layers className="w-5 h-5 text-purple-400" />
-          </div>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[hsl(217,33%,17%)] pb-6">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/suspects"
+            className="p-2.5 bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl text-slate-400 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
           <div>
-            <p className="font-semibold text-white text-sm">Unified Biometric Cluster Detected (Nagpur City & Rural PS)</p>
-            <p className="text-xs text-purple-300/80">Identical ArcFace 512-dim facial vector matches cases across {policeStation}, Sitabuldi PS, and Crime Branch Nagpur.</p>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                {suspectName}
+              </h1>
+              <span className="px-2.5 py-1 rounded-md text-xs font-semibold border bg-blue-500/15 text-blue-400 border-blue-500/30">
+                {suspectStatus}
+              </span>
+              <span className="px-2.5 py-1 rounded-md text-xs font-semibold border bg-amber-500/15 text-amber-300 border-amber-500/30">
+                Threat Tag: {threatLevel} (DEMO)
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1 flex flex-wrap items-center gap-2 font-mono">
+              <span>Demo ID: {record.id}</span>
+              <span>•</span>
+              <span className="text-blue-400">Alias: {suspectAlias}</span>
+              <span>•</span>
+              <span>Case Ref: {record.caseReferenceDemo || `DEMO-NGP-2026-${record.id}`}</span>
+            </p>
           </div>
         </div>
-        <Link href="/analytics" className="text-xs bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-purple-200 px-3 py-1.5 rounded-lg font-medium whitespace-nowrap self-start md:self-auto transition-colors flex items-center gap-1">
-          <Zap className="w-3.5 h-3.5 text-purple-400" /> View Similarity Network
-        </Link>
+
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={() => setShowEditModal(true)}
+            className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] hover:bg-slate-800 text-white px-3.5 py-2 rounded-xl flex items-center gap-2 text-xs font-semibold transition-all"
+          >
+            <Edit className="w-4 h-4 text-blue-400" />
+            Edit Demo Fields
+          </button>
+          <button
+            onClick={() => setShowStatusModal(true)}
+            className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-semibold transition-all"
+          >
+            <GitCommit className="w-4 h-4" />
+            Simulate Workflow Step
+          </button>
+          {String(record.id).includes('CUSTOM') && (
+            <button
+              onClick={handleDeleteRecord}
+              className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 px-3 py-2 rounded-xl flex items-center gap-1.5 text-xs font-semibold"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column (8/12) */}
         <div className="lg:col-span-8 space-y-6">
-          {/* Personal Info */}
+          {/* Fictional Demographic & UI Test Fields */}
           <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl overflow-hidden shadow-sm">
             <div className="p-4 border-b border-[hsl(217,33%,17%)] bg-white/5 flex items-center justify-between">
               <h2 className="text-base font-semibold text-white flex items-center gap-2">
                 <User className="w-4 h-4 text-blue-400" />
-                Demographic & Biometric Metadata
+                Synthetic Demo Attributes (All 35 Dataset Columns Populated)
               </h2>
+              <span className="text-[10px] font-mono text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                recordType: {record.recordType || 'SYNTHETIC_DEMO_ONLY'}
+              </span>
             </div>
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+
+            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-y-5 gap-x-8 text-sm">
               <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Age / Gender</p>
-                <p className="text-sm text-slate-200 font-medium flex items-center gap-2">
+                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                  Fictional Age &amp; Gender
+                </p>
+                <p className="text-slate-200 font-medium flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-slate-400" />
-                  {age} Years • {gender} • Indian
+                  {age} Years • {gender}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Height & Weight</p>
-                <p className="text-sm text-slate-200 font-medium">{height} • {weight}</p>
-              </div>
-              <div className="md:col-span-2">
-                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Jurisdiction / Police Station</p>
-                <p className="text-sm text-slate-200 font-medium flex items-start gap-2">
-                  <MapPin className="w-4 h-4 text-slate-400 mt-0.5" />
-                  {policeStation}, {suspectCity}, Maharashtra
+                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                  Fictional Height &amp; Weight
+                </p>
+                <p className="text-slate-200 font-medium">
+                  {height} • {weight}
                 </p>
               </div>
-              <div className="md:col-span-2 border-t border-[hsl(217,33%,17%)] pt-6">
-                <p className="text-xs text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-amber-400" /> Physical Marks & Traits
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                  Nagpur Demo Locality &amp; Region
                 </p>
-                <p className="text-sm text-slate-300 mb-3">{physicalDesc}</p>
-                <div className="bg-[hsl(222,47%,6%)] p-3 rounded-lg border border-[hsl(217,33%,17%)]">
-                  <span className="text-xs text-amber-400 font-medium mb-1 block">Distinguishing Marks:</span>
-                  <span className="text-sm text-slate-300 font-medium">{distinguishingMarks}</span>
+                <p className="text-slate-200 font-medium flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-blue-400 shrink-0" />
+                  {locality}, {record.city || 'Nagpur'}, {record.stateOrUT || 'Maharashtra'}
+                </p>
+                <p className="text-[11px] text-slate-500 mt-0.5">{record.region}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                  Demo Station Mapping
+                </p>
+                <p className="text-slate-200 font-medium text-xs">{policeStation}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                  Illustrative Synthetic Offence Category
+                </p>
+                <p className="text-amber-300 font-medium text-xs">
+                  {record.crimeCategory || 'Other Cognizable Offence (synthetic demo category)'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                  Demo Case Reference &amp; Count
+                </p>
+                <p className="text-slate-200 font-mono text-xs">
+                  {record.caseReferenceDemo || `DEMO-NGP-2026-${record.id}`} ({record.cases} demo cases)
+                </p>
+              </div>
+
+              <div className="md:col-span-2 border-t border-[hsl(217,33%,17%)] pt-4">
+                <p className="text-xs text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-amber-400" /> Fictional Visual Description &amp; Marks (UI Testing Only)
+                </p>
+                <p className="text-xs text-slate-300 mb-2">{physicalDesc}</p>
+                <div className="bg-[hsl(222,47%,6%)] p-3 rounded-lg border border-[hsl(217,33%,17%)] text-xs">
+                  <span className="text-amber-400 font-medium block mb-0.5">
+                    Distinguishing Marks Field:
+                  </span>
+                  <span className="text-slate-300">{distinguishingMarks}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Linked Cases */}
-          <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl overflow-hidden shadow-sm">
-            <div className="p-4 border-b border-[hsl(217,33%,17%)] bg-white/5 flex justify-between items-center">
+          {/* Provenance & Basis Metadata Card (All Basis Columns from Dataset) */}
+          <div className="bg-[hsl(222,47%,8%)] border border-amber-500/30 rounded-xl overflow-hidden shadow-sm">
+            <div className="p-4 border-b border-[hsl(217,33%,17%)] bg-amber-500/5 flex items-center justify-between">
               <h2 className="text-base font-semibold text-white flex items-center gap-2">
-                <Building className="w-4 h-4 text-purple-400" />
-                Linked Criminal Cases
+                <Info className="w-4 h-4 text-amber-400" />
+                Data Provenance &amp; Field Basis Disclosures
               </h2>
-              <button 
-                onClick={() => setShowLinkCaseModal(true)}
-                className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 text-xs px-3 py-1.5 rounded-lg font-semibold border border-purple-500/30 flex items-center gap-1 transition-colors"
-              >
-                <Plus className="w-3.5 h-3.5" /> Link Case
-              </button>
+              <span className="text-[10px] font-mono text-slate-400">
+                Updated: {record.lastUpdated || '2026-10-13'}
+              </span>
             </div>
-            <div className="divide-y divide-[hsl(217,33%,17%)]">
-              {linkedCases.map((c) => (
-                <div key={c.id} className="p-4 hover:bg-white/5 transition-colors flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 cursor-pointer">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-mono text-blue-400 font-bold">{c.id}</span>
-                      <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700 font-mono">{c.role}</span>
-                    </div>
-                    <p className="text-sm font-medium text-slate-200">{c.title}</p>
-                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-1"><Clock className="w-3 h-3" /> Date: {c.date}</p>
-                  </div>
-                  <span className="px-2.5 py-1 text-xs rounded-md font-semibold border bg-amber-500/10 text-amber-400 border-amber-500/20">
-                    {c.status}
+            <div className="p-5 space-y-3 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+                  <span className="text-slate-400 font-semibold block">Status Basis:</span>
+                  <span className="text-slate-300">
+                    {record.statusBasis || 'Random UI field; not an actual police/court/custody status.'}
                   </span>
                 </div>
-              ))}
+                <div className="p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+                  <span className="text-slate-400 font-semibold block">Threat Level Basis:</span>
+                  <span className="text-slate-300">
+                    {record.threatLevelBasis ||
+                      'Random UI display label; no predictive, forensic or legal validity.'}
+                  </span>
+                </div>
+                <div className="p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+                  <span className="text-slate-400 font-semibold block">Crime Category Basis:</span>
+                  <span className="text-slate-300">
+                    {record.crimeCategoryBasis ||
+                      'Illustrative synthetic label only; not an actual accusation and not frequency-calibrated to NCRB counts.'}
+                  </span>
+                </div>
+                <div className="p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+                  <span className="text-slate-400 font-semibold block">Locality Basis:</span>
+                  <span className="text-slate-300">
+                    {record.localityBasis ||
+                      'Real locality name used only as a broad demo setting; no event is asserted to have occurred there.'}
+                  </span>
+                </div>
+              </div>
+              <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 text-emerald-300">
+                <strong>Official Statistics Separation Context:</strong>{' '}
+                {record.statsSourceContext ||
+                  'Use separate official aggregate CSV for crime counts; no aggregate count is assigned to this profile.'}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Right Column (4/12) */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Mugshot Card */}
-          <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-6 flex flex-col items-center text-center shadow-sm">
-            <div className="w-40 h-40 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 border-4 border-[hsl(222,47%,8%)] shadow-2xl ring-2 ring-blue-500/30 flex items-center justify-center mb-4 relative overflow-hidden">
-              {photoUrl ? (
-                <img src={photoUrl} alt={suspectName} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-3xl font-bold text-slate-300">{getInitials(suspectName)}</span>
-              )}
+          {/* Fictional Portrait Card */}
+          <div className="bg-[hsl(222,47%,8%)] border border-amber-500/30 rounded-xl p-6 flex flex-col items-center text-center shadow-sm">
+            <span className="mb-3 px-2.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-amber-300 text-[10px] font-bold uppercase">
+              AI-Generated Fictional Portrait
+            </span>
+            <div className="w-40 h-40 rounded-full bg-slate-900 border-4 border-amber-500/30 shadow-xl flex items-center justify-center mb-4 relative overflow-hidden">
+              <img
+                src={photoUrl}
+                alt={suspectName}
+                onError={(e) => {
+                  e.currentTarget.src = FALLBACK_PORTRAIT_URL;
+                }}
+                className="w-full h-full object-cover"
+              />
             </div>
-            <h3 className="font-bold text-white text-lg">{suspectName}</h3>
-            <p className="text-xs text-slate-400 mb-4 font-mono">ArcFace 512-dim Vector: Indexed</p>
-            <div className="w-full p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs font-medium flex items-center justify-center gap-2">
-              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-              Active Criminal Dossier
+            <h3 className="font-bold text-white text-base">{suspectName}</h3>
+            <p className="text-[11px] text-slate-400 mt-1 font-mono">{photoUrl}</p>
+            <div className="w-full mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-amber-300 text-[11px] leading-snug">
+              {record.photoDisclaimer ||
+                'AI-generated fictional portrait; not a real person and not identity evidence.'}
             </div>
           </div>
 
-          {/* Interactive Lifecycle Stepper Timeline */}
+          {/* Simulated Workflow Stepper Timeline */}
           <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-6 border-b border-[hsl(217,33%,17%)] pb-3">
-              <h3 className="text-sm font-semibold text-white uppercase tracking-wider flex items-center gap-2">
+            <div className="flex items-center justify-between mb-4 border-b border-[hsl(217,33%,17%)] pb-3">
+              <h3 className="text-xs font-semibold text-white uppercase tracking-wider flex items-center gap-2">
                 <GitCommit className="w-4 h-4 text-blue-400" />
-                Arrest-to-Custody Timeline
+                Simulated Lifecycle Workflow (Demo)
               </h3>
             </div>
-            <div className="relative pl-4 space-y-6">
+            <div className="relative pl-4 space-y-5">
               <div className="absolute left-1.5 top-2 bottom-2 w-0.5 bg-[hsl(217,33%,17%)]"></div>
-              
               {timelineEvents.map((event, i) => (
                 <div key={i} className="relative pl-6">
-                  <div className={cn(
-                    "absolute -left-1 top-1 w-3.5 h-3.5 rounded-full border-2 border-[hsl(222,47%,8%)] transition-all",
-                    event.current ? 'bg-blue-500 ring-4 ring-blue-500/20 scale-110' : 'bg-slate-600'
-                  )}></div>
-                  <p className={cn("text-sm font-bold", event.current ? 'text-blue-400' : 'text-slate-200')}>
+                  <div
+                    className={cn(
+                      'absolute -left-1 top-1 w-3.5 h-3.5 rounded-full border-2 border-[hsl(222,47%,8%)]',
+                      event.current
+                        ? 'bg-blue-500 ring-4 ring-blue-500/20'
+                        : 'bg-slate-600'
+                    )}
+                  ></div>
+                  <p
+                    className={cn(
+                      'text-xs font-bold',
+                      event.current ? 'text-blue-400' : 'text-slate-200'
+                    )}
+                  >
                     {event.status}
                   </p>
-                  <p className="text-xs text-slate-400 mt-1">{event.location}</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">{event.location}</p>
                   <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-500 font-mono">
                     <span>{event.date}</span>
                     <span>•</span>
@@ -401,152 +492,154 @@ export default function SuspectDetailPage({ params }: { params: { id: string } }
         </div>
       </div>
 
-      {/* Edit Profile Modal */}
-      {showEditModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <form onSubmit={handleSaveProfile} className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-fade-in">
-            <div className="flex justify-between items-center border-b border-[hsl(217,33%,17%)] pb-3">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Edit className="w-5 h-5 text-blue-400" /> Edit Suspect Profile
-              </h3>
-              <button type="button" onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="text-slate-300 font-semibold block mb-1">Full Name</label>
-                <input type="text" value={suspectName} onChange={(e) => setSuspectName(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
-              </div>
-              <div>
-                <label className="text-slate-300 font-semibold block mb-1">Aliases</label>
-                <input type="text" value={suspectAlias} onChange={(e) => setSuspectAlias(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
-              </div>
-              <div>
-                <label className="text-slate-300 font-semibold block mb-1">Police Station Jurisdiction</label>
-                <input type="text" value={policeStation} onChange={(e) => setPoliceStation(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white" />
-              </div>
-              <div>
-                <label className="text-slate-300 font-semibold block mb-1">Threat Level</label>
-                <select value={threatLevel} onChange={(e) => setThreatLevel(e.target.value as any)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
-                  <option value="CRITICAL">CRITICAL</option>
-                  <option value="HIGH">HIGH</option>
-                  <option value="MEDIUM">MEDIUM</option>
-                  <option value="LOW">LOW</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-slate-300 font-semibold block mb-1">Physical Description</label>
-                <textarea rows={2} value={physicalDesc} onChange={(e) => setPhysicalDesc(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
-              </div>
-              <div>
-                <label className="text-slate-300 font-semibold block mb-1">Distinguishing Marks</label>
-                <input type="text" value={distinguishingMarks} onChange={(e) => setDistinguishingMarks(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-3 border-t border-[hsl(217,33%,17%)]">
-              <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 rounded-lg text-slate-400 hover:text-white">Cancel</button>
-              <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold">Save Changes</button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Link Case Modal */}
-      {showLinkCaseModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <form onSubmit={handleLinkCase} className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-fade-in">
-            <div className="flex justify-between items-center border-b border-[hsl(217,33%,17%)] pb-3">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Link2 className="w-5 h-5 text-purple-400" /> Link Case to Suspect
-              </h3>
-              <button type="button" onClick={() => setShowLinkCaseModal(false)} className="text-slate-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="text-slate-300 font-semibold block mb-1">Select Case Record</label>
-                <select value={selectedCaseToLink} onChange={(e) => setSelectedCaseToLink(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
-                  <option value="CR/2026/9001">CR/2026/9001 — Commercial Burglary & Strongroom Break-in</option>
-                  <option value="CR/2026/8002">CR/2026/8002 — Cyber Phishing Financial Fraud</option>
-                  <option value="CR/2026/7003">CR/2026/7003 — Highway Vehicle Theft Ring</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-3 border-t border-[hsl(217,33%,17%)]">
-              <button type="button" onClick={() => setShowLinkCaseModal(false)} className="px-4 py-2 rounded-lg text-slate-400 hover:text-white">Cancel</button>
-              <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold">Confirm Case Link</button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Lifecycle Status Modal */}
+      {/* Simulate Status Modal */}
       {showStatusModal && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-fade-in">
-            <div className="flex justify-between items-center border-b border-[hsl(217,33%,17%)] pb-3">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <GitCommit className="w-5 h-5 text-blue-400" />
-                Update Suspect Lifecycle Status
+          <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-[hsl(217,33%,17%)]">
+              <h3 className="text-base font-bold text-white">
+                Simulate Demo Workflow Status Transition
               </h3>
-              <button onClick={() => setShowStatusModal(false)} className="text-slate-400 hover:text-white">
+              <button
+                onClick={() => setShowStatusModal(false)}
+                className="text-slate-400 hover:text-white"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
-
-            <div className="space-y-4">
+            <form onSubmit={handleUpdateStatus} className="space-y-4 text-xs">
+              <div className="p-2.5 rounded bg-amber-500/10 border border-amber-500/30 text-amber-300">
+                This updates the local UI demonstration state only. It does not represent a real police, judicial, or custodial action.
+              </div>
               <div>
-                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-1">New Status</label>
-                <select 
-                  value={newStatus} 
+                <label className="block text-slate-400 mb-1 uppercase font-semibold">
+                  Select Demo Status
+                </label>
+                <select
+                  value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
-                  className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500"
+                  className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-white"
                 >
-                  <option value="ARRESTED">ARRESTED (Initial Detention)</option>
-                  <option value="IN_REMAND">IN_REMAND (Judicial / Police Remand)</option>
-                  <option value="BAILED">BAILED (Granted Court Bail)</option>
-                  <option value="TRIAL">TRIAL (Under Active Court Trial)</option>
-                  <option value="CONVICTED">CONVICTED (Sentenced by Court)</option>
-                  <option value="CUSTODY">CUSTODY (State Correctional Custody)</option>
-                  <option value="RELEASED">RELEASED (Acquitted / Released)</option>
+                  <option value="UNDER_INVESTIGATION (DEMO)">UNDER_INVESTIGATION (DEMO)</option>
+                  <option value="ARRESTED (DEMO)">ARRESTED (DEMO)</option>
+                  <option value="IN_REMAND (DEMO)">IN_REMAND (DEMO)</option>
+                  <option value="COURT_PENDING (DEMO)">COURT_PENDING (DEMO)</option>
+                  <option value="ON_BAIL (DEMO)">ON_BAIL (DEMO)</option>
+                  <option value="CONVICTED (DEMO)">CONVICTED (DEMO)</option>
+                  <option value="CLOSED (DEMO)">CLOSED (DEMO)</option>
                 </select>
               </div>
-
               <div>
-                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-1">Court / Station Jurisdiction</label>
-                <input 
-                  type="text" 
-                  value={courtName} 
-                  onChange={(e) => setCourtName(e.target.value)}
-                  className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" 
+                <label className="block text-slate-400 mb-1 uppercase font-semibold">
+                  Simulation Note
+                </label>
+                <input
+                  type="text"
+                  value={demoNote}
+                  onChange={(e) => setDemoNote(e.target.value)}
+                  className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-white"
                 />
               </div>
-
-              <div>
-                <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-1">Legal Order / Warrant Reference</label>
-                <input 
-                  type="text" 
-                  value={orderNo} 
-                  onChange={(e) => setOrderNo(e.target.value)}
-                  className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-blue-500" 
-                />
+              <div className="flex justify-end gap-2 pt-3 border-t border-[hsl(217,33%,17%)]">
+                <button
+                  type="button"
+                  onClick={() => setShowStatusModal(false)}
+                  className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold flex items-center gap-1"
+                >
+                  <Check className="w-4 h-4" /> Apply Demo Transition
+                </button>
               </div>
-            </div>
+            </form>
+          </div>
+        </div>
+      )}
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-[hsl(217,33%,17%)]">
-              <button onClick={() => setShowStatusModal(false)} className="px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-white">
-                Cancel
-              </button>
-              <button onClick={handleUpdateStatus} className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold flex items-center gap-1">
-                <Check className="w-4 h-4" /> Save Status Transition
+      {/* Edit Demo Profile Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-2xl max-w-lg w-full p-6 shadow-2xl">
+            <div className="flex justify-between items-center mb-4 pb-3 border-b border-[hsl(217,33%,17%)]">
+              <h3 className="text-base font-bold text-white">Edit Synthetic Demo Profile</h3>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-slate-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
+            <form onSubmit={handleSaveProfile} className="space-y-3 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-slate-400 mb-1">Fictional Name</label>
+                  <input
+                    type="text"
+                    value={suspectName}
+                    onChange={(e) => setSuspectName(e.target.value)}
+                    className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-white"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">Demo Alias</label>
+                  <input
+                    type="text"
+                    value={suspectAlias}
+                    onChange={(e) => setSuspectAlias(e.target.value)}
+                    className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-white"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">Portrait Asset (1–32)</label>
+                  <select
+                    value={photoUrl}
+                    onChange={(e) => setPhotoUrl(e.target.value)}
+                    className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-white"
+                  >
+                    {Array.from({ length: 32 }, (_, i) => {
+                      const num = String(i + 1).padStart(3, '0');
+                      const url = `/images/portrait_${num}.jpg`;
+                      return (
+                        <option key={url} value={url}>
+                          portrait_{num}.jpg (Synthetic Asset)
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">Nagpur Demo Locality</label>
+                  <input
+                    type="text"
+                    value={locality}
+                    onChange={(e) => setLocality(e.target.value)}
+                    className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-3 py-2 text-white"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-3 border-t border-[hsl(217,33%,17%)]">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 rounded-lg border border-slate-700 text-slate-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-lg bg-blue-600 text-white font-semibold"
+                >
+                  Save Demo Changes
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
