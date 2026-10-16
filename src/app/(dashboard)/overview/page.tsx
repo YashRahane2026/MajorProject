@@ -66,16 +66,6 @@ export default function OverviewPage() {
     return () => window.removeEventListener('crimetrack-role-change', syncRole);
   }, []);
 
-  const handleRoleSelect = (role: RoleKey) => {
-    setActiveRole(role);
-    if (typeof window !== 'undefined') {
-      document.cookie = `demo_role=${role}; path=/; max-age=86400`;
-      localStorage.setItem('demo_role', role);
-      localStorage.setItem('demo_user', `${role.charAt(0).toUpperCase() + role.slice(1)} Officer`);
-      window.dispatchEvent(new CustomEvent('crimetrack-role-change', { detail: { role } }));
-    }
-  };
-
   // Available years per jurisdiction based on verified official records
   const availableYears = useMemo(() => {
     const years = Array.from(
@@ -218,31 +208,11 @@ export default function OverviewPage() {
           </p>
         </div>
 
-        {/* Role View Selector Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-[hsl(222,47%,8%)] p-1.5 rounded-xl border border-[hsl(217,33%,17%)]">
-          {[
-            { id: 'admin' as RoleKey, label: 'Admin View', icon: Database },
-            { id: 'police' as RoleKey, label: 'Police View', icon: Building2 },
-            { id: 'court' as RoleKey, label: 'Court View', icon: Scale },
-            { id: 'custodial' as RoleKey, label: 'Custodial View', icon: Lock },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeRole === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleRoleSelect(tab.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                  isActive
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                {tab.label}
-              </button>
-            );
-          })}
+        {/* Authenticated Departmental Session Badge */}
+        <div className="flex items-center gap-2.5 text-xs font-mono text-slate-300 bg-slate-900/70 px-3.5 py-2 rounded-xl border border-slate-800">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-slate-400">Authenticated Session:</span>
+          <span className="text-white font-semibold uppercase">{activeRole} Portal</span>
         </div>
       </div>
 
