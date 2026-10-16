@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   ExternalLink,
   Image as ImageIcon,
+  Sparkles,
 } from 'lucide-react';
 import {
   BASE_INDIAN_SUSPECTS,
@@ -121,6 +122,36 @@ export default function DatasetInspectorModal({
               <span className="text-[10px] text-emerald-400">
                 Official Dashboard (2023–2025)
               </span>
+            </div>
+          </div>
+
+          {/* Biometric Augmentation Pipeline Showcase (5,000 Suspects) */}
+          <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                Biometric Image Augmentation Pipeline (5,000 Suspect Instances)
+              </h3>
+              <span className="text-[10px] bg-emerald-500/10 text-emerald-300 px-2 py-0.5 rounded font-mono border border-emerald-500/20">
+                FORENSIC CCTV JITTER &amp; POSE INVARIANCE
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              To evaluate ArcFace feature extractor robustness under real surveillance environments, enrolled suspect profiles are calibrated across realistic forensic transformations: affine rotation (&plusmn;6&deg;), luminance/contrast shifts, Gaussian CCTV sensor noise, and surveillance vignette shading.
+            </p>
+            <div className="rounded-lg overflow-hidden border border-slate-700 bg-slate-950 p-1">
+              <img 
+                src="/images/augmentation_demo_comparison.jpg" 
+                alt="Forensic Biometric Augmentation Comparison" 
+                className="w-full h-auto object-contain max-h-48 rounded"
+              />
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-[10px] text-slate-400 font-mono text-center">
+              <div className="bg-slate-950/60 p-1.5 rounded border border-slate-800">1. Original Mugshot</div>
+              <div className="bg-slate-950/60 p-1.5 rounded border border-slate-800">2. Low Light + Grain</div>
+              <div className="bg-slate-950/60 p-1.5 rounded border border-slate-800">3. Affine Rotation &plusmn;6&deg;</div>
+              <div className="bg-slate-950/60 p-1.5 rounded border border-slate-800">4. High Contrast CCTV</div>
+              <div className="bg-slate-950/60 p-1.5 rounded border border-slate-800">5. Surveillance Grain</div>
             </div>
           </div>
 
