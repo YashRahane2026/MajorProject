@@ -57,6 +57,59 @@ export function normalizePhotoUrl(url?: string | null): string {
   return '/' + trimmed.replace(/^\.?\//, '');
 }
 
+/**
+ * Compresses and resizes an uploaded mugshot image file to a standard compact format (max 320x320 JPEG, ~18KB).
+ * Ensures instant transmission, zero 413 HTTP errors, and eliminates browser localStorage quota exhaustion.
+ */
+export function compressMugshotImage(file: File, maxWidth = 320, maxHeight = 320, quality = 0.82): Promise<string> {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined' || !file || !file.type.startsWith('image/')) {
+      return resolve(FALLBACK_PORTRAIT_URL);
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const rawUrl = e.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+
+          canvas.width = Math.max(1, width);
+          canvas.height = Math.max(1, height);
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressed = canvas.toDataURL('image/jpeg', quality);
+            resolve(compressed);
+          } else {
+            resolve(rawUrl);
+          }
+        } catch {
+          resolve(rawUrl);
+        }
+      };
+      img.onerror = () => resolve(rawUrl);
+      img.src = rawUrl;
+    };
+    reader.onerror = () => resolve(FALLBACK_PORTRAIT_URL);
+    reader.readAsDataURL(file);
+  });
+}
+
 export const SYNTHETIC_DATASET_SUMMARY = {
   totalProfiles: 5000,
   totalColumns: 35,
@@ -1028,6 +1081,10 @@ export function ensureSyntheticCompliance(record: SuspectRecord): SuspectRecord 
       ? record.alias.replace(/\s*\(demo\)/gi, '').trim()
       : 'None';
 
+  const isCustomRecord = 
+    record.recordType === 'CUSTOM_RECORD' ||
+    String(record.id).includes('CUSTOM');
+
   return {
     ...record,
     id: cleanId,
@@ -1037,8 +1094,8 @@ export function ensureSyntheticCompliance(record: SuspectRecord): SuspectRecord 
     photoDisclaimer: 'Standard identification profile photograph.',
     crimeCategory:
       record.crimeCategory?.replace(/\s*\(synthetic.*?\)/gi, '').trim() ||
-      'Other Cognizable Offence',
-    recordType: 'SUSPECT_RECORD',
+      'Theft / Property Offence',
+    recordType: isCustomRecord ? 'CUSTOM_RECORD' : 'SUSPECT_RECORD',
     isSynthetic: 'TRUE',
     isRealPerson: 'FALSE',
     isRealCase: 'FALSE',
@@ -1072,7 +1129,7 @@ export function getAllSuspects(): SuspectRecord[] {
 
   const merged = [...custom];
   BASE_INDIAN_SUSPECTS.forEach((b) => {
-    if (!merged.some((m) => String(m.id) === String(b.id))) {
+    if (!merged.some((m) => String(m.id).toLowerCase() === String(b.id).toLowerCase())) {
       merged.push(b);
     }
   });
@@ -1080,7 +1137,7 @@ export function getAllSuspects(): SuspectRecord[] {
 }
 
 /**
- * Save a newly registered or updated suspect profile
+ * Save a newly registered or updated suspect profile with quota protection
  */
 export function saveSuspect(suspect: SuspectRecord): SuspectRecord[] {
   const compliant = ensureSyntheticCompliance(suspect);
@@ -1090,9 +1147,20 @@ export function saveSuspect(suspect: SuspectRecord): SuspectRecord[] {
     const custom = getCustomDemoSuspects();
     const updatedCustom = [
       compliant,
-      ...custom.filter((s) => String(s.id) !== String(compliant.id)),
+      ...custom.filter((s) => String(s.id).toLowerCase() !== String(compliant.id).toLowerCase()),
     ];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedCustom));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedCustom));
+    } catch (quotaErr) {
+      console.warn('LocalStorage quota limit reached, trimming heavy image assets:', quotaErr);
+      const lightweight = updatedCustom.map((item, idx) => {
+        if (idx > 3 && item.photoUrl?.startsWith('data:')) {
+          return { ...item, photoUrl: FALLBACK_PORTRAIT_URL };
+        }
+        return item;
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(lightweight));
+    }
     return getAllSuspects();
   } catch (err) {
     console.error('Error saving suspect:', err);

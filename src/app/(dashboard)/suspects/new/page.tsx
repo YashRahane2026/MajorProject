@@ -17,7 +17,7 @@ import {
   ShieldAlert,
   Activity
 } from 'lucide-react';
-import { saveSuspect, SuspectRecord } from '@/lib/data/suspects-data';
+import { saveSuspect, SuspectRecord, compressMugshotImage } from '@/lib/data/suspects-data';
 
 export default function NewSuspectPage() {
   const router = useRouter();
@@ -34,6 +34,7 @@ export default function NewSuspectPage() {
   const [idType, setIdType] = useState('Aadhaar');
   const [idNumber, setIdNumber] = useState('');
   const [city, setCity] = useState('Nagpur');
+  const [crimeCategory, setCrimeCategory] = useState('Cybercrime / Online Fraud');
   const [threatLevel, setThreatLevel] = useState('HIGH');
   const [status, setStatus] = useState('ARRESTED');
   const [height, setHeight] = useState('178');
@@ -47,14 +48,19 @@ export default function NewSuspectPage() {
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (file: File) => {
+  const handleFileChange = async (file: File) => {
     if (file && file.type.startsWith('image/')) {
       setSelectedFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreviewUrl(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressed = await compressMugshotImage(file, 320, 320, 0.82);
+        setPreviewUrl(compressed);
+      } catch {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setPreviewUrl(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
     }
   };
 
@@ -101,13 +107,17 @@ export default function NewSuspectPage() {
     const birthYear = parseInt(dob.split('-')[0] || '1995', 10);
     const calculatedAge = Math.max(18, new Date().getFullYear() - birthYear);
 
+    const newId = `SYN-NGP-${Date.now().toString().slice(-5)}`;
     const newSuspect: SuspectRecord = {
-      id: `SYN-NGP-${Date.now().toString().slice(-5)}`,
+      id: newId,
       name: `${firstName.trim()} ${lastName.trim()}`,
       alias: alias.trim() || 'None',
       threatLevel: (threatLevel as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW') || 'MEDIUM',
       status: status,
       city: 'Nagpur',
+      district: 'Nagpur',
+      stateOrUT: 'Maharashtra',
+      region: 'Nagpur Metropolitan Region',
       locality: city.trim() || 'Sitabuldi',
       policeStation: `Nagpur Police — ${city.trim() || 'Sitabuldi'} Station`,
       cases: 1,
@@ -119,7 +129,9 @@ export default function NewSuspectPage() {
       physicalDesc: physicalDesc || 'Medium build, dark hair.',
       distinguishingMarks: distinguishingMarks || 'None recorded',
       photoUrl: previewUrl || '/images/portrait_001.jpg',
-      recordType: 'SUSPECT_RECORD',
+      crimeCategory: crimeCategory || 'Cybercrime / Online Fraud',
+      caseReferenceDemo: `NGP-2026-${newId}`,
+      recordType: 'CUSTOM_RECORD',
       isSynthetic: 'TRUE',
       isRealPerson: 'FALSE',
       isRealCase: 'FALSE',
@@ -311,6 +323,23 @@ export default function NewSuspectPage() {
                     <option value="ON_BAIL">On Bail</option>
                     <option value="CONVICTED">Convicted</option>
                     <option value="CLOSED">Closed</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5 md:col-span-2">
+                  <label className="text-sm font-medium text-slate-300">Crime Offence Category</label>
+                  <select 
+                    value={crimeCategory} 
+                    onChange={(e) => setCrimeCategory(e.target.value)}
+                    className="w-full bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  >
+                    <option value="Cybercrime / Online Fraud">Cybercrime / Online Fraud</option>
+                    <option value="Theft / Property Offence">Theft / Property Offence</option>
+                    <option value="Robbery / Extortion">Robbery / Extortion</option>
+                    <option value="Burglary / House Breaking">Burglary / House Breaking</option>
+                    <option value="Assault / Grievous Hurt">Assault / Grievous Hurt</option>
+                    <option value="Financial Fraud / Cheating">Financial Fraud / Cheating</option>
+                    <option value="Narcotic Drugs (NDPS)">Narcotic Drugs (NDPS)</option>
+                    <option value="Organized Crime / Arms Act">Organized Crime / Arms Act</option>
                   </select>
                 </div>
                 <div className="space-y-1.5 md:col-span-2">

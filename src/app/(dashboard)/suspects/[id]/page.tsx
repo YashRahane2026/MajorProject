@@ -70,7 +70,7 @@ export default function SuspectDetailPage() {
         const res = await fetch(`/api/suspects/${encodeURIComponent(rawId)}`);
         if (res.ok) {
           const json = await res.json();
-          const p: SuspectRecord = localMatch || json.data;
+          const p: SuspectRecord = json.data || localMatch;
           if (active && p) {
             applyProfileToState(p);
             setLoading(false);
@@ -84,6 +84,12 @@ export default function SuspectDetailPage() {
       if (active) {
         if (localMatch) {
           applyProfileToState(localMatch);
+          // Proactively re-sync custom suspect to server so future lookups succeed
+          fetch('/api/suspects', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(localMatch),
+          }).catch(() => {});
         }
         setLoading(false);
       }
@@ -293,7 +299,7 @@ export default function SuspectDetailPage() {
             <GitCommit className="w-4 h-4" />
             Update Status
           </button>
-          {String(record.id).includes('CUSTOM') && (
+          {(record.recordType === 'CUSTOM_RECORD' || String(record.id).includes('CUSTOM') || Number(String(record.id).replace(/\D/g, '')) > 5000) && (
             <button
               onClick={handleDeleteRecord}
               className="bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 px-3 py-2 rounded-xl flex items-center gap-1.5 text-xs font-semibold"

@@ -14,7 +14,32 @@ let cachedFilterMeta: {
   localities: string[];
 } | null = null;
 
-const serverCustomSuspects: SuspectRecord[] = [];
+const CUSTOM_PERSISTENCE_PATH = path.join(process.cwd(), 'data', 'demo', 'custom_registered_suspects.json');
+
+function initServerCustomSuspects(): SuspectRecord[] {
+  try {
+    if (fs.existsSync(CUSTOM_PERSISTENCE_PATH)) {
+      const raw = fs.readFileSync(CUSTOM_PERSISTENCE_PATH, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map(ensureSyntheticCompliance);
+      }
+    }
+  } catch (err) {
+    // Ignore in ephemeral or read-only serverless environment
+  }
+  return [];
+}
+
+const serverCustomSuspects: SuspectRecord[] = initServerCustomSuspects();
+
+function persistCustomSuspectsToFile() {
+  try {
+    fs.writeFileSync(CUSTOM_PERSISTENCE_PATH, JSON.stringify(serverCustomSuspects, null, 2), 'utf-8');
+  } catch {
+    // Ignore if running in a read-only serverless environment
+  }
+}
 
 export function addCustomServerSuspect(suspect: SuspectRecord): SuspectRecord {
   const compliant = ensureSyntheticCompliance(suspect);
@@ -28,6 +53,7 @@ export function addCustomServerSuspect(suspect: SuspectRecord): SuspectRecord {
   }
   // Invalidate cached filter metadata
   cachedFilterMeta = null;
+  persistCustomSuspectsToFile();
   return compliant;
 }
 
@@ -43,6 +69,7 @@ export function removeCustomServerSuspect(id: string): boolean {
   if (idx >= 0) {
     serverCustomSuspects.splice(idx, 1);
     cachedFilterMeta = null;
+    persistCustomSuspectsToFile();
     return true;
   }
   return false;

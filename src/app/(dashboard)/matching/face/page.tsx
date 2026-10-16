@@ -28,7 +28,8 @@ import {
   extractCanvasFeatureVector, 
   computeVectorCosine, 
   SuspectRecord,
-  BASE_INDIAN_SUSPECTS
+  BASE_INDIAN_SUSPECTS,
+  compressMugshotImage
 } from '@/lib/data/suspects-data';
 import HowItWorksModal from '@/components/modals/how-it-works-modal';
 import DatasetInspectorModal from '@/components/modals/dataset-inspector-modal';
@@ -132,18 +133,23 @@ export default function FaceMatchingPage() {
     setAllSuspects(getAllSuspects());
   }, []);
 
-  const handleFileChange = (file: File) => {
+  const handleFileChange = async (file: File) => {
     if (file && file.type.startsWith('image/')) {
       setSelectedFile(file);
       const fname = file.name.toLowerCase();
       const nonFaceKw = ['building', 'house', 'car', 'vehicle', 'landscape', 'nature', 'city', 'object', 'dog', 'cat', 'structure'];
       setIsKnownNonFace(nonFaceKw.some(k => fname.includes(k)));
       
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreviewUrl(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressed = await compressMugshotImage(file, 320, 320, 0.82);
+        setPreviewUrl(compressed);
+      } catch {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setPreviewUrl(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
       setResults(null);
       setErrorMessage(null);
       setRegistrationSuccessBanner(null);
@@ -340,24 +346,35 @@ export default function FaceMatchingPage() {
       return;
     }
 
-    const newId = `custom_${Date.now()}`;
+    const newId = `SYN-NGP-${Date.now().toString().slice(-5)}`;
     const newSuspect: SuspectRecord = {
       id: newId,
       name: newSuspectName.trim(),
-      alias: newSuspectAlias.trim() || '-',
+      alias: newSuspectAlias.trim() || 'None',
       threatLevel: newSuspectThreat,
       status: newSuspectStatus,
       city: newSuspectCity.trim() || 'Nagpur',
+      district: 'Nagpur',
+      stateOrUT: 'Maharashtra',
+      region: 'Nagpur Metropolitan Region',
+      locality: newSuspectCity.trim() || 'Sitabuldi',
       policeStation: newSuspectStation.trim() || 'Sitabuldi PS, Nagpur',
       physicalDesc: newSuspectDesc.trim() || 'Biometric mugshot indexed via ArcFace Facial Recognition search.',
       distinguishingMarks: 'Mugshot biometric profile indexed.',
       cases: 1,
       lastUpdated: new Date().toISOString().split('T')[0],
-      gender: 'Male',
+      gender: getPortraitGender(previewUrl),
       age: 30,
       height: '175 cm',
       weight: '75 kg',
       photoUrl: previewUrl || '/images/portrait_001.jpg',
+      crimeCategory: 'Other Cognizable Offence',
+      caseReferenceDemo: `NGP-2026-${newId}`,
+      recordType: 'CUSTOM_RECORD',
+      isSynthetic: 'TRUE',
+      isRealPerson: 'FALSE',
+      isRealCase: 'FALSE',
+      recordDisclaimer: 'Nagpur Police Suspect Tracking Record.',
     };
 
     const updated = saveSuspect(newSuspect);

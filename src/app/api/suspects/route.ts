@@ -64,8 +64,13 @@ export async function GET(request: Request) {
       case 'cases_desc':
         return (b.cases || 0) - (a.cases || 0);
       case 'id_asc':
-      default:
+      default: {
+        const aCustom = a.recordType === 'CUSTOM_RECORD' || String(a.id).includes('CUSTOM') || Number(String(a.id).replace(/\D/g, '')) > 5000;
+        const bCustom = b.recordType === 'CUSTOM_RECORD' || String(b.id).includes('CUSTOM') || Number(String(b.id).replace(/\D/g, '')) > 5000;
+        if (aCustom && !bCustom) return -1;
+        if (!aCustom && bCustom) return 1;
         return String(a.id).localeCompare(String(b.id));
+      }
     }
   });
 

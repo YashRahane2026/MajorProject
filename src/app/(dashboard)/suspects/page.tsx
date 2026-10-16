@@ -92,6 +92,20 @@ export default function SuspectsPage() {
 
   const [showDatasetModal, setShowDatasetModal] = useState(false);
 
+  // Auto-sync custom local suspects with server on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const localCustom = getCustomDemoSuspects();
+      if (localCustom.length > 0) {
+        fetch('/api/suspects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sync: localCustom }),
+        }).catch(() => {});
+      }
+    }
+  }, []);
+
   // Read URL params on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -143,10 +157,10 @@ export default function SuspectsPage() {
       const matchingCustom = customLocal.filter((s) => {
         if (threatFilter && s.threatLevel !== threatFilter) return false;
         if (statusFilter && s.status !== statusFilter) return false;
-        if (categoryFilter && s.crimeCategory !== categoryFilter) return false;
-        if (localityFilter && s.locality !== localityFilter) return false;
+        if (categoryFilter && (s.crimeCategory || '').toLowerCase() !== categoryFilter.toLowerCase()) return false;
+        if (localityFilter && (s.locality || '').toLowerCase() !== localityFilter.toLowerCase()) return false;
         if (qLower) {
-          const hay = [s.id, s.name, s.alias, s.locality, s.policeStation, s.crimeCategory]
+          const hay = [s.id, s.name, s.alias, s.locality, s.policeStation, s.crimeCategory, s.physicalDesc]
             .filter(Boolean)
             .join(' ')
             .toLowerCase();
@@ -161,7 +175,8 @@ export default function SuspectsPage() {
       const existingIds = new Set(rows.map((r) => String(r.id).toLowerCase()));
       const unaddedCustom = matchingCustom.filter((c) => !existingIds.has(String(c.id).toLowerCase()));
 
-      if (unaddedCustom.length > 0) {
+      // Pin custom suspects at the top on Page 1 or during active searches so they never disappear
+      if (unaddedCustom.length > 0 && (currentPage === 1 || qLower.length > 0)) {
         rows = [...unaddedCustom, ...rows];
       }
 
@@ -447,85 +462,101 @@ export default function SuspectsPage() {
                     </td>
                   </tr>
                 ) : (
-                  suspects.map((suspect) => (
-                    <tr
-                      key={suspect.id}
-                      className="hover:bg-white/[0.03] transition-colors group"
-                    >
-                      <td className="py-3.5 px-4">
-                        <Link
-                          href={`/suspects/${suspect.id}`}
-                          className="flex items-center gap-3"
-                        >
-                          <div className="w-11 h-11 rounded-full bg-slate-800 border border-slate-700 group-hover:border-blue-500/50 flex items-center justify-center overflow-hidden shrink-0 transition-colors">
-                            <img
-                              src={normalizePhotoUrl(suspect.photoUrl)}
-                              alt={suspect.name}
-                              onError={(e) => {
-                                e.currentTarget.src = FALLBACK_PORTRAIT_URL;
-                              }}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div>
-                            <div className="font-semibold text-white group-hover:text-blue-400 transition-colors">
-                              {suspect.name}
+                  suspects.map((suspect) => {
+                    const isCustom = 
+                      suspect.recordType === 'CUSTOM_RECORD' ||
+                      String(suspect.id).includes('CUSTOM') ||
+                      Number(String(suspect.id).replace(/\D/g, '')) > 5000;
+
+                    return (
+                      <tr
+                        key={suspect.id}
+                        className={`hover:bg-white/[0.03] transition-colors group ${
+                          isCustom ? 'bg-blue-500/[0.03] border-l-2 border-l-emerald-500' : ''
+                        }`}
+                      >
+                        <td className="py-3.5 px-4">
+                          <Link
+                            href={`/suspects/${suspect.id}`}
+                            className="flex items-center gap-3"
+                          >
+                            <div className={`w-11 h-11 rounded-full bg-slate-800 border flex items-center justify-center overflow-hidden shrink-0 transition-colors ${
+                              isCustom ? 'border-emerald-500/60 shadow-sm shadow-emerald-500/20' : 'border-slate-700 group-hover:border-blue-500/50'
+                            }`}>
+                              <img
+                                src={normalizePhotoUrl(suspect.photoUrl)}
+                                alt={suspect.name}
+                                onError={(e) => {
+                                  e.currentTarget.src = FALLBACK_PORTRAIT_URL;
+                                }}
+                                className="w-full h-full object-cover"
+                              />
                             </div>
-                            <div className="text-[11px] text-slate-400 font-mono">
-                              {suspect.id} • {suspect.age}y • {suspect.gender}
+                            <div>
+                              <div className="font-semibold text-white group-hover:text-blue-400 transition-colors flex items-center gap-1.5">
+                                <span>{suspect.name}</span>
+                                {isCustom && (
+                                  <span className="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.2 rounded font-mono font-bold">
+                                    NEWLY ENROLLED
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[11px] text-slate-400 font-mono">
+                                {suspect.id} • {suspect.age}y • {suspect.gender}
+                              </div>
                             </div>
-                          </div>
-                        </Link>
-                      </td>
-                      <td className="py-3.5 px-4 text-xs text-slate-300 font-medium font-mono">
-                        {suspect.alias || 'None'}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="text-xs font-mono text-blue-400">
-                          {suspect.caseReferenceDemo?.replace(/^DEMO-/i, '') || suspect.id}
-                        </div>
-                        <div className="text-[11px] text-slate-400 truncate max-w-[240px]" title={suspect.crimeCategory}>
-                          {suspect.crimeCategory}
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="flex flex-col items-start gap-1">
-                          <StatusBadge status={suspect.status} />
-                          <ThreatBadge level={suspect.threatLevel} />
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 text-xs text-slate-300">
-                        <div className="flex items-center gap-1 font-medium text-white">
-                          <MapPin className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                          {suspect.locality || suspect.city}
-                        </div>
-                        <div className="text-[10px] text-slate-500 truncate max-w-[220px]" title={suspect.policeStation}>
-                          {suspect.policeStation}
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Link href={`/suspects/${suspect.id}`}>
-                            <button
-                              className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
-                              title="View Profile Details"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
                           </Link>
-                          {String(suspect.id).includes('CUSTOM') && (
-                            <button
-                              onClick={() => handleDeleteSuspect(suspect.id, suspect.name)}
-                              className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                              title="Delete Profile"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                        <td className="py-3.5 px-4 text-xs text-slate-300 font-medium font-mono">
+                          {suspect.alias || 'None'}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="text-xs font-mono text-blue-400">
+                            {suspect.caseReferenceDemo?.replace(/^DEMO-/i, '') || suspect.id}
+                          </div>
+                          <div className="text-[11px] text-slate-400 truncate max-w-[240px]" title={suspect.crimeCategory}>
+                            {suspect.crimeCategory}
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="flex flex-col items-start gap-1">
+                            <StatusBadge status={suspect.status} />
+                            <ThreatBadge level={suspect.threatLevel} />
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4 text-xs text-slate-300">
+                          <div className="flex items-center gap-1 font-medium text-white">
+                            <MapPin className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                            {suspect.locality || suspect.city}
+                          </div>
+                          <div className="text-[10px] text-slate-500 truncate max-w-[220px]" title={suspect.policeStation}>
+                            {suspect.policeStation}
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Link href={`/suspects/${suspect.id}`}>
+                              <button
+                                className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                title="View Profile Details"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                            </Link>
+                            {isCustom && (
+                              <button
+                                onClick={() => handleDeleteSuspect(suspect.id, suspect.name)}
+                                className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                title="Delete Profile"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
