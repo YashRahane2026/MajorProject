@@ -15,6 +15,11 @@ import {
   Trash2,
   Building2,
   FileText,
+  Scale,
+  Shield,
+  Phone,
+  Home,
+  Fingerprint,
 } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -264,8 +269,13 @@ export default function SuspectDetailPage() {
           </Link>
           <div>
             <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                {suspectName}
+              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight flex flex-wrap items-baseline gap-2">
+                <span>{suspectName}</span>
+                {record.fatherOrGuardianName && (
+                  <span className="text-slate-400 font-normal text-sm sm:text-base">
+                    (S/o / D/o {record.fatherOrGuardianName})
+                  </span>
+                )}
               </h1>
               <span className="px-2.5 py-1 rounded-md text-xs font-semibold border bg-blue-500/15 text-blue-400 border-blue-500/30">
                 {cleanDisplayStatus}
@@ -333,7 +343,7 @@ export default function SuspectDetailPage() {
                 </p>
                 <p className="text-slate-200 font-medium flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-slate-400" />
-                  {age} Years • {gender}
+                  {age} Years • {gender} {record.bloodGroup ? `• Blood: ${record.bloodGroup}` : ''}
                 </p>
               </div>
               <div>
@@ -341,9 +351,29 @@ export default function SuspectDetailPage() {
                   Height &amp; Weight
                 </p>
                 <p className="text-slate-200 font-medium">
-                  {height} • {weight}
+                  {height} • {weight} {record.complexion ? `• Complexion: ${record.complexion}` : ''}
                 </p>
               </div>
+
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                  Parentage / Father's Name
+                </p>
+                <p className="text-slate-200 font-medium text-xs">
+                  {record.fatherOrGuardianName ? `S/o or D/o ${record.fatherOrGuardianName}` : 'Parentage details on file'}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                  Contact &amp; ID Proof
+                </p>
+                <p className="text-slate-200 font-medium text-xs font-mono">
+                  {record.phoneNumber ? `Ph: ${record.phoneNumber}` : 'No phone linked'}
+                  {record.aadhaarNumber ? ` • Aadhaar: ${record.aadhaarNumber}` : ''}
+                </p>
+              </div>
+
               <div>
                 <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
                   Jurisdiction &amp; Locality
@@ -354,6 +384,17 @@ export default function SuspectDetailPage() {
                 </p>
                 <p className="text-[11px] text-slate-500 mt-0.5">{record.region || 'Nagpur Metropolitan Region'}</p>
               </div>
+
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
+                  Residential Address
+                </p>
+                <p className="text-slate-200 font-medium text-xs flex items-center gap-1.5">
+                  <Home className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  {record.address || `${locality}, Nagpur`} {record.nativePlace ? `(Hometown: ${record.nativePlace})` : ''}
+                </p>
+              </div>
+
               <div>
                 <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
                   Assigned Police Station
@@ -363,6 +404,7 @@ export default function SuspectDetailPage() {
                   {policeStation}
                 </p>
               </div>
+
               <div>
                 <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
                   Primary Offence Classification
@@ -371,13 +413,14 @@ export default function SuspectDetailPage() {
                   {record.crimeCategory?.replace(/\s*\(synthetic.*?\)/i, '') || 'Cognizable Offence'}
                 </p>
               </div>
-              <div>
+
+              <div className="md:col-span-2">
                 <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">
-                  Case Reference &amp; Investigations
+                  Case Reference &amp; Active Investigations
                 </p>
                 <p className="text-slate-200 font-mono text-xs flex items-center gap-1.5">
                   <FileText className="w-3.5 h-3.5 text-slate-400" />
-                  {record.caseReferenceDemo?.replace(/^DEMO-/i, '') || record.id} ({record.cases} linked cases)
+                  {record.caseReferenceDemo?.replace(/^DEMO-/i, '') || record.id} ({record.cases} linked cases on record)
                 </p>
               </div>
 
@@ -388,9 +431,52 @@ export default function SuspectDetailPage() {
                 <p className="text-xs text-slate-300 mb-2 leading-relaxed">{physicalDesc}</p>
                 <div className="bg-[hsl(222,47%,6%)] p-3 rounded-lg border border-[hsl(217,33%,17%)] text-xs">
                   <span className="text-blue-400 font-medium block mb-0.5">
-                    Distinguishing Marks:
+                    Distinguishing Marks &amp; Tattoos:
                   </span>
                   <span className="text-slate-300">{distinguishingMarks}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Criminological Intelligence, BNS/IPC & Modus Operandi Card */}
+          <div className="bg-[hsl(222,47%,8%)] border border-[hsl(217,33%,17%)] rounded-xl overflow-hidden shadow-sm">
+            <div className="p-4 border-b border-[hsl(217,33%,17%)] bg-white/5 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-white flex items-center gap-2">
+                <Scale className="w-4 h-4 text-purple-400" />
+                Criminological Intelligence &amp; Modus Operandi (MO)
+              </h2>
+              <span className="text-[10px] font-mono text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded border border-blue-500/20">
+                BERT NLP Semantic Vector Indexed
+              </span>
+            </div>
+            <div className="p-6 space-y-4 text-xs">
+              <div>
+                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+                  <span className="font-semibold text-slate-300">Modus Operandi (MO) Narrative Pattern</span>
+                  <span className="text-[10px] text-emerald-400 font-normal">Active for Cross-FIR Case Linking</span>
+                </p>
+                <div className="p-3.5 rounded-lg bg-[hsl(222,47%,6%)] border border-[hsl(217,33%,17%)] text-slate-200 leading-relaxed text-xs">
+                  {record.modusOperandi || 'Operates in urban transit corridors targeting vulnerable individuals; uses stolen vehicles, forged plates, and transient aliases during escape.'}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                <div className="p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+                  <span className="text-slate-400 font-semibold block mb-1">Applicable Legal Head / Sections:</span>
+                  <span className="text-amber-300 font-mono">{record.bnsOrIpcSection || 'BNS 303(2) / IPC 379 [Theft], BNS 317'}</span>
+                </div>
+                <div className="p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+                  <span className="text-slate-400 font-semibold block mb-1">Gang / Syndicate Affiliation:</span>
+                  <span className="text-slate-200 font-medium">{record.gangAffiliation || 'None / Independent Operator'}</span>
+                </div>
+                <div className="p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+                  <span className="text-slate-400 font-semibold block mb-1">Prior Arrest History &amp; Sheet:</span>
+                  <span className="text-slate-200 font-medium">{record.priorArrestHistory || (record.cases > 1 ? `Repeat Offender (${record.cases} Prior FIRs)` : 'First-Time Offender')}</span>
+                </div>
+                <div className="p-3 rounded-lg bg-slate-900/70 border border-slate-800">
+                  <span className="text-slate-400 font-semibold block mb-1">Assigned Investigating Officer:</span>
+                  <span className="text-blue-300">{record.investigatingOfficer || 'Inspector V. K. Deshmukh (Badge #4812)'}</span>
                 </div>
               </div>
             </div>

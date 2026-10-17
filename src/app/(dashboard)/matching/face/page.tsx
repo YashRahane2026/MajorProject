@@ -121,6 +121,10 @@ export default function FaceMatchingPage() {
   const [newSuspectStatus, setNewSuspectStatus] = useState<'ARRESTED' | 'IN_REMAND' | 'TRIAL' | 'BAILED' | 'CONVICTED' | 'AT_LARGE' | 'CUSTODY'>('ARRESTED');
   const [newSuspectStation, setNewSuspectStation] = useState('Sitabuldi PS, Nagpur');
   const [newSuspectCity, setNewSuspectCity] = useState('Nagpur');
+  const [newSuspectFatherName, setNewSuspectFatherName] = useState('');
+  const [newSuspectCategory, setNewSuspectCategory] = useState('Theft / Property Offence');
+  const [newSuspectSection, setNewSuspectSection] = useState('BNS 303(2) / IPC 379 [Theft]');
+  const [newSuspectMO, setNewSuspectMO] = useState('Operates in transit corridors targeting solitary pedestrians during evening hours.');
   const [newSuspectDesc, setNewSuspectDesc] = useState('');
   const [registrationSuccessBanner, setRegistrationSuccessBanner] = useState<string | null>(null);
 
@@ -350,6 +354,7 @@ export default function FaceMatchingPage() {
     const newSuspect: SuspectRecord = {
       id: newId,
       name: newSuspectName.trim(),
+      fatherOrGuardianName: newSuspectFatherName.trim() || undefined,
       alias: newSuspectAlias.trim() || 'None',
       threatLevel: newSuspectThreat,
       status: newSuspectStatus,
@@ -368,7 +373,9 @@ export default function FaceMatchingPage() {
       height: '175 cm',
       weight: '75 kg',
       photoUrl: previewUrl || '/images/portrait_001.jpg',
-      crimeCategory: 'Other Cognizable Offence',
+      crimeCategory: newSuspectCategory || 'Theft / Property Offence',
+      bnsOrIpcSection: newSuspectSection.trim() || undefined,
+      modusOperandi: newSuspectMO.trim() || undefined,
       caseReferenceDemo: `NGP-2026-${newId}`,
       recordType: 'CUSTOM_RECORD',
       isSynthetic: 'TRUE',
@@ -822,7 +829,20 @@ export default function FaceMatchingPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-slate-300 font-semibold block mb-1">Known Alias</label>
+                  <label className="text-slate-300 font-semibold block mb-1">Father's / Guardian's Name</label>
+                  <input 
+                    type="text" 
+                    value={newSuspectFatherName} 
+                    onChange={(e) => setNewSuspectFatherName(e.target.value)} 
+                    placeholder="e.g. Ramesh Deshmukh"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500" 
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-slate-300 font-semibold block mb-1">Known Alias / Street Name</label>
                   <input 
                     type="text" 
                     value={newSuspectAlias} 
@@ -830,6 +850,21 @@ export default function FaceMatchingPage() {
                     placeholder="e.g. Vicky / Raja"
                     className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500" 
                   />
+                </div>
+                <div>
+                  <label className="text-slate-300 font-semibold block mb-1">Crime Category</label>
+                  <select 
+                    value={newSuspectCategory} 
+                    onChange={(e) => setNewSuspectCategory(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500 text-xs"
+                  >
+                    <option value="Theft / Property Offence">Theft / Property Offence</option>
+                    <option value="Robbery / Extortion">Robbery / Extortion</option>
+                    <option value="Cybercrime / Online Fraud">Cybercrime / Online Fraud</option>
+                    <option value="Burglary / House Breaking">Burglary / House Breaking</option>
+                    <option value="Assault / Grievous Hurt">Assault / Grievous Hurt</option>
+                    <option value="Narcotic Drugs (NDPS)">Narcotic Drugs (NDPS)</option>
+                  </select>
                 </div>
               </div>
 
@@ -868,7 +903,7 @@ export default function FaceMatchingPage() {
                   <select 
                     value={newSuspectStation} 
                     onChange={(e) => setNewSuspectStation(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500 text-xs"
                   >
                     <option value="Sitabuldi PS, Nagpur">Sitabuldi PS, Nagpur</option>
                     <option value="Sadar PS, Nagpur">Sadar PS, Nagpur</option>
@@ -881,15 +916,26 @@ export default function FaceMatchingPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-slate-300 font-semibold block mb-1">City</label>
+                  <label className="text-slate-300 font-semibold block mb-1">BNS / IPC Sections</label>
                   <input 
                     type="text" 
-                    value={newSuspectCity} 
-                    onChange={(e) => setNewSuspectCity(e.target.value)} 
-                    placeholder="e.g. Nagpur"
-                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500" 
+                    value={newSuspectSection} 
+                    onChange={(e) => setNewSuspectSection(e.target.value)} 
+                    placeholder="e.g. BNS 303(2) / IPC 379"
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500 text-xs font-mono" 
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="text-slate-300 font-semibold block mb-1">Modus Operandi (MO) Pattern</label>
+                <textarea 
+                  rows={2} 
+                  value={newSuspectMO} 
+                  onChange={(e) => setNewSuspectMO(e.target.value)} 
+                  placeholder="e.g. Targets solitary pedestrians using stolen two-wheeler..."
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500 text-xs" 
+                />
               </div>
 
               <div>
@@ -899,7 +945,7 @@ export default function FaceMatchingPage() {
                   value={newSuspectDesc} 
                   onChange={(e) => setNewSuspectDesc(e.target.value)} 
                   placeholder="e.g. Cut mark on left cheek, tattoo on forearm..."
-                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500" 
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white focus:outline-none focus:border-blue-500 text-xs" 
                 />
               </div>
             </div>

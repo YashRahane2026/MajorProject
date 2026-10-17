@@ -38,6 +38,19 @@ export interface SuspectRecord {
   statsSourceContext?: string;
   notForRealWorldIdentificationOrDecisions?: string | boolean;
   recordDisclaimer?: string;
+  fatherOrGuardianName?: string;
+  phoneNumber?: string;
+  aadhaarNumber?: string;
+  address?: string;
+  nativePlace?: string;
+  bnsOrIpcSection?: string;
+  modusOperandi?: string;
+  gangAffiliation?: string;
+  investigatingOfficer?: string;
+  priorArrestHistory?: string;
+  bloodGroup?: string;
+  complexion?: string;
+  eyeColor?: string;
   featureVector?: number[];
 }
 
